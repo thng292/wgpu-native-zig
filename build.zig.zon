@@ -2,7 +2,13 @@
     .name = .wgpu_native_zig,
     .version = "0.0.1",
     .minimum_zig_version = "0.16.0",
-    .paths = .{""},
+    .paths = .{
+        "src/",
+        "LICENSE",
+        "README.md",
+        "build.zig",
+        "build.zig.zon",
+    },
     .fingerprint = 0xdd8fa7c477734d42,
     .dependencies = .{
         .wgpu_android_aarch64_debug = .{
