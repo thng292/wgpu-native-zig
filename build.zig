@@ -76,8 +76,11 @@ fn getWGPUDeps(b: *std.Build, target: std.Target, optimze: std.builtin.OptimizeM
     } else {
         dep_name = std.mem.concat(b.allocator, u8, &.{ dep_name, "release" }) catch unreachable;
     }
-    const dep = b.lazyDependency(dep_name, .{}) orelse @panic("Either wgpu-native does not support your target or I suck.");
-    return dep;
+    // std.log.debug("dep_name: {s}", .{dep_name});
+    if (b.lazyDependency(dep_name, .{})) |dep| {
+        return dep;
+    }
+    return undefined;
 }
 
 fn linkSystemLib(compile_step: *std.Build.Module, target: std.Target) void {

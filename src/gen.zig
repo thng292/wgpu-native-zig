@@ -2,6 +2,274 @@ const std = @import("std");
 
 const logger = std.log.scoped(.main);
 
+pub fn main(init: std.process.Init) !void {
+    var args_iterator = init.minimal.args.iterate();
+    _ = args_iterator.skip(); // skip args[0]
+    const cwd = std.Io.Dir.cwd();
+    var buffer: [512]u8 = undefined;
+    const buf: []u8 = &buffer;
+    const arena = init.arena.allocator();
+    while (args_iterator.next()) |file| {
+        defer _ = init.arena.reset(.retain_capacity);
+        logger.debug("processing: {s}", .{file});
+
+        const input_json = try cwd.openFile(init.io, file, .{ .mode = .read_only });
+        errdefer input_json.close(init.io);
+
+        var reader = input_json.reader(init.io, buf);
+        const input_json_content = try reader.interface.readAlloc(arena, try input_json.length(init.io));
+        input_json.close(init.io);
+        defer arena.free(input_json_content);
+
+        const parsed = try std.json.parseFromSlice(
+            Yml,
+            arena,
+            input_json_content,
+            .{
+                .allocate = .alloc_if_needed,
+                .ignore_unknown_fields = true,
+                .duplicate_field_behavior = .@"error",
+                .parse_numbers = true,
+            },
+        );
+        errdefer parsed.deinit();
+        logger.debug("{s}", .{parsed.value.copyright});
+        const zig_code = try generateZigCode(parsed.value, arena);
+        defer arena.free(zig_code);
+        parsed.deinit();
+
+        const outfile_name = try std.mem.concat(arena, u8, &.{ file, ".zig" });
+        defer arena.free(outfile_name);
+        const outfile = try cwd.createFile(init.io, outfile_name, .{});
+        try outfile.writeStreamingAll(init.io, zig_code);
+        outfile.close(init.io);
+    }
+}
+
+fn generateZigCode(spec: Yml, allocator: std.mem.Allocator) ![]u8 {
+    var results: std.Io.Writer.Allocating = .init(allocator);
+    var writer = &results.writer;
+
+    // ---------------Copyright---------------
+    try writeComment(spec.copyright, .top, writer);
+    try writeComment(spec.doc, .top, writer);
+
+    // ---------------Copyright---------------
+    _ = try writer.write(@embedFile("template.zig"));
+
+    for (spec.typedefs) |typedef| {
+        _ = std.ascii.upperString(typedef.name, typedef.name);
+        _ = std.ascii.upperString(typedef.type, typedef.type);
+        if (typedef.doc.len > 0) {
+            try writeComment(typedef.doc, .doc, writer);
+        }
+        _ = try writer.write("pub const ");
+        _ = try writer.write(typedef.name);
+        _ = try writer.write(" = ");
+        try renderTypeName(spec, typedef.type, writer);
+        _ = try writer.write(";\n\n");
+    }
+
+    for (spec.constants) |*constant| {
+        _ = std.ascii.upperString(constant.name, constant.name);
+        _ = std.ascii.upperString(constant.value, constant.value);
+        if (constant.doc.len > 0) {
+            try writeComment(constant.doc, .doc, writer);
+        }
+        try writer.print("pub const {s} = {s};\n\n", .{ constant.name, constant.value });
+    }
+
+    for (spec.functions) |function| {
+        try renderCFunction(spec, function, writer);
+        try writer.writeByte('\n');
+        try writer.writeByte('\n');
+    }
+
+    try writer.flush();
+    return results.toOwnedSlice();
+}
+
+fn writeComment(comment_: []const u8, kind: enum { normal, doc, top }, writer: *std.Io.Writer) !void {
+    const comment = std.mem.trim(u8, comment_, &std.ascii.whitespace);
+    var line_iter = std.mem.splitAny(u8, comment, "\n");
+    while (line_iter.next()) |line| {
+        switch (kind) {
+            .normal => try writer.print("// {s}\n", .{line}),
+            .doc => try writer.print("/// {s}\n", .{line}),
+            .top => try writer.print("//! {s}\n", .{line}),
+        }
+    }
+}
+
+fn convertSnakeToCamel(input: []const u8, writer: *std.Io.Writer) !void {
+    var next_upper = false;
+    for (input) |c| {
+        if (c == '_') {
+            next_upper = true;
+            continue;
+        }
+        if (next_upper) {
+            try writer.writeByte(std.ascii.toUpper(c));
+        } else {
+            try writer.writeByte(c);
+        }
+        next_upper = false;
+    }
+}
+
+fn convertSnakeToPascal(input: []const u8, writer: *std.Io.Writer) !void {
+    var next_upper = true;
+    for (input) |c| {
+        if (c == '_') {
+            next_upper = true;
+            continue;
+        }
+        if (next_upper) {
+            try writer.writeByte(std.ascii.toUpper(c));
+        } else {
+            try writer.writeByte(c);
+        }
+        next_upper = false;
+    }
+}
+
+const QueryResult = union(enum) {
+    constant: Constant,
+    typedef: Typedef,
+    @"enum": Enum,
+    bitflag: Bitflag,
+    @"struct": Struct,
+    callback: Callback,
+    function: Function,
+    object: Object,
+};
+
+fn queryRef(spec: Yml, query: []const u8) ?QueryResult {
+    // Query format: stuff.inner
+    var split_iter = std.mem.splitAny(u8, query, ".");
+    const stuff = split_iter.next() orelse return null;
+    const inner = split_iter.rest();
+    const QueryResultTag = std.meta.Tag(QueryResult);
+    const tag = std.meta.stringToEnum(QueryResultTag, stuff) orelse return null;
+    switch (tag) {
+        inline else => |field| {
+            const items = @field(spec, @tagName(field) ++ "s");
+            for (items) |item| {
+                if (std.mem.eql(u8, item.name, inner)) {
+                    return @unionInit(QueryResult, @tagName(field), item);
+                }
+            }
+        },
+    }
+
+    return null;
+}
+
+fn renderTypeName(spec: Yml, type_name: []const u8, writer: *std.Io.Writer) !void {
+    const prefined_type_map: std.StaticStringMap([]const u8) = .initComptime(.{
+        .{ "bool", "Bool" },
+        .{ "string_with_default_empty", "StringView" },
+        .{ "out_string", "StringView" },
+        .{ "nullable_string", "StringView" },
+        .{ "int16", "i16" },
+        .{ "uint16", "i16" },
+        .{ "int32", "i32" },
+        .{ "uint32", "u32" },
+        .{ "int64", "i64" },
+        .{ "uint64", "u64" },
+        .{ "usize", "usize" },
+        .{ "float32", "f32" },
+        .{ "nullable_float32", "f32" },
+        .{ "float64", "f64" },
+        .{ "float64_supertype", "f64" },
+        .{ "c_void", "void" },
+        .{ "c_void_data_ptr", "void" },
+        .{ "c_void_mapped_range_ptr", "void" },
+        .{ "c_void_a_native_window", "void" },
+        .{ "c_void_ca_metal_layer", "void" },
+        .{ "c_void_h_instance", "void" },
+        .{ "c_void_h_wnd", "void" },
+        .{ "c_void_wl_display", "void" },
+        .{ "c_void_wl_surface", "void" },
+        .{ "c_void_x11_display", "void" },
+        .{ "c_void_xcb_connection", "void" },
+    });
+    if (prefined_type_map.get(type_name)) |name| {
+        _ = try writer.write(name);
+        return;
+    }
+    if (queryRef(spec, type_name)) |query_result| {
+        switch (query_result) {
+            inline else => |value| {
+                try convertSnakeToPascal(value.name, writer);
+            },
+        }
+    } else {
+        _ = try writer.write(type_name);
+    }
+}
+
+fn renderCParam(spec: Yml, param: ParameterType, writer: *std.Io.Writer) !void {
+    const array_start = "array<";
+    if (std.mem.startsWith(u8, param.type, array_start)) {
+        _ = try writer.write(param.name.?[0 .. param.name.?.len - 1]);
+        _ = try writer.write("Count: usize,");
+
+        _ = try writer.write(param.name.?);
+        try writer.writeByte(':');
+        try renderPtrAndOptional(param.optional, param.pointer, writer);
+        try renderTypeName(spec, param.type[array_start.len .. param.type.len - 1], writer);
+    } else {
+        _ = try writer.write(param.name.?);
+        try writer.writeByte(':');
+        try renderPtrAndOptional(param.optional, param.pointer, writer);
+        try renderTypeName(spec, param.type, writer);
+    }
+}
+
+fn renderParam(spec: Yml, param: ParameterType, writer: *std.Io.Writer) !void {
+    _ = try writer.write(param.name.?);
+    try writer.writeByte(':');
+    try renderPtrAndOptional(param.optional, param.pointer, writer);
+    try renderTypeName(spec, param.type, writer);
+}
+
+fn renderCFunction(spec: Yml, function: Function, writer: *std.Io.Writer) !void {
+    _ = try writer.write("extern \"C\" fn wgpu");
+    try convertSnakeToPascal(function.name, writer);
+
+    try writer.writeByte('(');
+    for (function.args) |arg| {
+        try renderCParam(spec, arg, writer);
+        try writer.writeByte(',');
+    }
+    try writer.writeByte(')');
+
+    if (function.returns) |rt| {
+        try renderPtrAndOptional(rt.optional, rt.pointer, writer);
+        try renderTypeName(spec, rt.type, writer);
+    } else {
+        _ = try writer.write("void");
+    }
+
+    try writer.writeByte(';');
+}
+
+fn renderPtrAndOptional(
+    optional: bool,
+    pointer: ?PointerType,
+    writer: *std.Io.Writer,
+) !void {
+    if (optional) _ = try writer.write("?");
+    if (pointer) |ptr_type| {
+        _ = try writer.write("*");
+        switch (ptr_type) {
+            .immutable => _ = try writer.write("const "),
+            .mutable => {},
+        }
+    }
+}
+
 pub const PointerType = enum {
     mutable,
     immutable,
@@ -147,176 +415,3 @@ pub const Object = struct {
 
     methods: []Function = &[_]Function{},
 };
-
-pub fn main(init: std.process.Init) !void {
-    var args_iterator = init.minimal.args.iterate();
-    _ = args_iterator.skip(); // skip args[0]
-    const cwd = std.Io.Dir.cwd();
-    var buffer: [512]u8 = undefined;
-    const buf: []u8 = &buffer;
-    const arena = init.arena.allocator();
-    while (args_iterator.next()) |file| {
-        defer _ = init.arena.reset(.retain_capacity);
-        logger.debug("processing: {s}", .{file});
-
-        const input_json = try cwd.openFile(init.io, file, .{ .mode = .read_only });
-        errdefer input_json.close(init.io);
-
-        var reader = input_json.reader(init.io, buf);
-        const input_json_content = try reader.interface.readAlloc(arena, try input_json.length(init.io));
-        input_json.close(init.io);
-        defer arena.free(input_json_content);
-
-        const parsed = try std.json.parseFromSlice(
-            Yml,
-            arena,
-            input_json_content,
-            .{
-                .allocate = .alloc_if_needed,
-                .ignore_unknown_fields = true,
-                .duplicate_field_behavior = .@"error",
-                .parse_numbers = true,
-            },
-        );
-        errdefer parsed.deinit();
-        logger.debug("{s}", .{parsed.value.copyright});
-        const zig_code = try generateZigCode(parsed.value, arena);
-        defer arena.free(zig_code);
-        parsed.deinit();
-
-        const outfile_name = try std.mem.concat(arena, u8, &.{ file, ".zig" });
-        defer arena.free(outfile_name);
-        const outfile = try cwd.createFile(init.io, outfile_name, .{});
-        try outfile.writeStreamingAll(init.io, zig_code);
-        outfile.close(init.io);
-    }
-}
-
-fn generateZigCode(spec: Yml, allocator: std.mem.Allocator) ![]u8 {
-    var results: std.Io.Writer.Allocating = .init(allocator);
-    var writer = &results.writer;
-    const tmpBuf = try allocator.alloc(u8, 2048);
-
-    // ---------------Copyright---------------
-    try writeMutilineComment(spec.copyright, .top, writer);
-    try writeMutilineComment(spec.doc, .top, writer);
-
-    // ---------------Copyright---------------
-    _ = try writer.write(
-        \\
-        \\// --------------------TEMPLATE_START--------------------
-        \\
-        \\const std = @import("std");
-        \\
-        \\// These are some hard-coded values.
-        \\const UINT32_MAX = std.math.maxInt(u32);
-        \\const UINT64_MAX = std.math.maxInt(u64);
-        \\const USIZE_MAX = std.math.maxInt(usize);
-        \\const NAN = std.math.nan(f32);
-        \\
-        \\const TRUE: u32 = 1;
-        \\const FALSE: u32 = 0;
-        \\// --------------------TEMPLATE_END----------------------
-        \\
-        \\
-    );
-    // Generate the constants first
-    for (spec.constants) |*constant| {
-        _ = std.ascii.upperString(constant.name, constant.name);
-        _ = std.ascii.upperString(constant.value, constant.value);
-        if (constant.doc.len > 0) {
-            try writeMutilineComment(constant.doc, .doc, writer);
-        }
-        try writer.print("const {s} = {s};\n\n", .{ constant.name, constant.value });
-    }
-
-    for (spec.functions) |function| {
-        const fun_name = convertSnakeToPascal(function.name, tmpBuf);
-        var remaining_buf = tmpBuf[fun_name.len..];
-        for (function.args) |arg| {
-            const tmp = renderParam(arg, remaining_buf);
-            remaining_buf[tmp.len] = ',';
-            remaining_buf = remaining_buf[tmp.len + 1 ..];
-        }
-        const args = tmpBuf[fun_name.len .. tmpBuf.len - remaining_buf.len];
-        try writer.print("extern \"C\" fn wgpu{s}({s}) {s};\n", .{ fun_name, args, "void" });
-    }
-
-    try writer.flush();
-    return results.toOwnedSlice();
-}
-
-fn writeMutilineComment(comment_: []const u8, kind: enum { normal, doc, top }, writer: *std.Io.Writer) !void {
-    const comment = std.mem.trim(u8, comment_, &std.ascii.whitespace);
-    var line_iter = std.mem.splitAny(u8, comment, "\n");
-    while (line_iter.next()) |line| {
-        switch (kind) {
-            .normal => try writer.print("// {s}\n", .{line}),
-            .doc => try writer.print("/// {s}\n", .{line}),
-            .top => try writer.print("//! {s}\n", .{line}),
-        }
-    }
-}
-
-fn convertSnakeToCamel(input: []const u8, output: []u8) []const u8 {
-    std.debug.assert(input.len <= output.len);
-    var write_count: usize = 0;
-    var next_upper = false;
-    for (input) |c| {
-        if (c == '_') {
-            next_upper = true;
-            continue;
-        }
-        if (next_upper) {
-            output[write_count] = std.ascii.toUpper(c);
-        } else {
-            output[write_count] = c;
-        }
-        write_count += 1;
-        next_upper = false;
-    }
-    return output[0..write_count];
-}
-
-fn convertSnakeToPascal(input: []const u8, output: []u8) []const u8 {
-    std.debug.assert(input.len <= output.len);
-    var write_count: usize = 0;
-    var next_upper = true;
-    for (input) |c| {
-        if (c == '_') {
-            next_upper = true;
-            continue;
-        }
-        if (next_upper) {
-            output[write_count] = std.ascii.toUpper(c);
-        } else {
-            output[write_count] = c;
-        }
-        write_count += 1;
-        next_upper = false;
-    }
-    return output[0..write_count];
-}
-
-const QueryResult = union(enum) {
-    constants: Constant,
-    typedefs: Typedef,
-    enums: Enum,
-    bitflags: Bitflag,
-    structs: Struct,
-    callbacks: Callback,
-    functions: Function,
-    objects: Object,
-};
-
-fn queryRef(spec: Yml, query: []u8) ?QueryResult {
-    _ = query;
-    return QueryResult{ .structs = spec.structs[0] };
-}
-
-fn renderParam(param: ParameterType, output: []u8) []u8 {
-    _ = param;
-    const tmp = "a: c_int";
-    std.mem.copyForwards(u8, output, tmp);
-    return output[0..tmp.len];
-}
