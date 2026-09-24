@@ -1,13 +1,14 @@
 const std = @import("std");
 
 const logger = std.log.scoped(.main);
+const RAW = false;
 
 pub fn main(init: std.process.Init) !void {
     var args_iterator = init.minimal.args.iterate();
     _ = args_iterator.skip(); // skip args[0]
     const cwd = std.Io.Dir.cwd();
-    var buffer: [512]u8 = undefined;
-    const buf: []u8 = &buffer;
+    const buf: []u8 = try init.gpa.alloc(u8, 512);
+    defer init.gpa.free(buf);
     const arena = init.arena.allocator();
     while (args_iterator.next()) |file| {
         defer _ = init.arena.reset(.retain_capacity);
@@ -33,63 +34,176 @@ pub fn main(init: std.process.Init) !void {
             },
         );
         errdefer parsed.deinit();
-        logger.debug("{s}", .{parsed.value.copyright});
-        const zig_code = try generateZigCode(parsed.value, arena);
+        var ctx: Context = .{ .spec = parsed.value, .allocator = arena };
+        const zig_code = try generateZigCode(&ctx);
         defer arena.free(zig_code);
         parsed.deinit();
 
         const outfile_name = try std.mem.concat(arena, u8, &.{ file, ".zig" });
         defer arena.free(outfile_name);
         const outfile = try cwd.createFile(init.io, outfile_name, .{});
-        try outfile.writeStreamingAll(init.io, zig_code);
+        if (RAW) {
+            try outfile.writeStreamingAll(init.io, zig_code);
+        } else {
+            var ast = try std.zig.Ast.parse(init.gpa, zig_code, .zig);
+            defer ast.deinit(init.gpa);
+
+            if (ast.errors.len > 0) {
+                for (ast.errors) |err| {
+                    logger.debug("kind: {t}", .{err.tag});
+                }
+            }
+            var outfile_writer = outfile.writer(init.io, buf);
+            const interface = &outfile_writer.interface;
+            try ast.render(init.gpa, interface, .{ .rebase_imported_paths = null });
+            try interface.flush();
+        }
         outfile.close(init.io);
     }
 }
 
-fn generateZigCode(spec: Yml, allocator: std.mem.Allocator) ![]u8 {
-    var results: std.Io.Writer.Allocating = .init(allocator);
+fn generateZigCode(ctx: *Context) ![:0]u8 {
+    var results: std.Io.Writer.Allocating = .init(ctx.allocator);
     var writer = &results.writer;
-
     // ---------------Copyright---------------
-    try writeComment(spec.copyright, .top, writer);
-    try writeComment(spec.doc, .top, writer);
+    try renderComment(ctx.spec.copyright, .top, writer);
+    try renderComment(ctx.spec.doc, .top, writer);
 
     // ---------------Copyright---------------
     _ = try writer.write(@embedFile("template.zig"));
 
-    for (spec.typedefs) |typedef| {
-        _ = std.ascii.upperString(typedef.name, typedef.name);
-        _ = std.ascii.upperString(typedef.type, typedef.type);
+    for (ctx.spec.typedefs) |typedef| {
+        logger.debug("Generating typedef: {s}", .{typedef.name});
         if (typedef.doc.len > 0) {
-            try writeComment(typedef.doc, .doc, writer);
+            try renderComment(typedef.doc, .doc, writer);
         }
         _ = try writer.write("pub const ");
-        _ = try writer.write(typedef.name);
+        try convertSnakeToPascal(typedef.name, writer);
         _ = try writer.write(" = ");
-        try renderTypeName(spec, typedef.type, writer);
+        try renderTypeName(ctx, typedef.type, writer);
         _ = try writer.write(";\n\n");
     }
 
-    for (spec.constants) |*constant| {
-        _ = std.ascii.upperString(constant.name, constant.name);
-        _ = std.ascii.upperString(constant.value, constant.value);
+    for (ctx.spec.constants) |constant| {
+        logger.debug("Generating constant: {s}", .{constant.name});
+        const upper_name = try ctx.allocator.alloc(u8, constant.name.len);
+        defer ctx.allocator.free(upper_name);
+        _ = std.ascii.upperString(upper_name, constant.name);
+
+        const upper_value = try ctx.allocator.alloc(u8, constant.value.len);
+        defer ctx.allocator.free(upper_value);
+        _ = std.ascii.upperString(upper_value, constant.value);
+
         if (constant.doc.len > 0) {
-            try writeComment(constant.doc, .doc, writer);
+            try renderComment(constant.doc, .doc, writer);
         }
-        try writer.print("pub const {s} = {s};\n\n", .{ constant.name, constant.value });
+        try writer.print("pub const {s} = {s};\n\n", .{ upper_name, upper_value });
+    }
+    for (ctx.spec.enums) |enumm| {
+        logger.debug(
+            "Generating enum: {s}, with {} memebers",
+            .{ enumm.name, enumm.entries.len },
+        );
+        if (enumm.doc.len > 0) {
+            try renderComment(enumm.doc, .doc, writer);
+        }
+        _ = try writer.write("pub const ");
+        try convertSnakeToPascal(enumm.name, writer);
+        _ = try writer.write(" = enum(u32) {\n");
+        for (enumm.entries) |entry_| {
+            if (entry_ == null) continue;
+            const entry = entry_.?;
+            if (entry.doc.len > 0) {
+                try renderComment(entry.doc, .doc, writer);
+            }
+            if (entry.value) |val| {
+                try writer.print("@\"{s}\" = 0x{X:0>8},\n", .{ entry.name, val });
+            } else {
+                try writer.print("@\"{s}\",\n", .{entry.name});
+            }
+        }
+        _ = try writer.write("};\n\n");
+    }
+    for (ctx.spec.bitflags) |bitflag| {
+        logger.debug(
+            "Generating bitfag: {s}, with {} options",
+            .{ bitflag.name, bitflag.entries.len },
+        );
+        _ = try writer.write("pub const ");
+        try convertSnakeToPascal(bitflag.name, writer);
+        _ = try writer.write(" = packed struct(Flags) {\n");
+        var left: u6 = 63;
+        for (bitflag.entries, 0..) |entry, i| {
+            if (i == 0 and std.mem.eql(u8, entry.name, "none")) continue;
+            if (entry.doc.len > 0) {
+                try renderComment(entry.doc, .doc, writer);
+            }
+            try writer.print("@\"{s}\": bool,\n", .{entry.name});
+            left -= 1;
+        }
+        try writer.print("__unused: u{},\n", .{left + 1});
+        _ = try writer.write("};\n");
+    }
+    for (ctx.spec.callbacks) |cb| {
+        _ = cb;
     }
 
-    for (spec.functions) |function| {
-        try renderCFunction(spec, function, writer);
+    // ------------------------For C extern functions------------------------
+    for (ctx.spec.functions) |function| {
+        logger.debug(
+            "Generating C function: {s}, has {} args, return {s}",
+            .{ function.name, function.args.len, if (function.returns) |rt| rt.type else "void" },
+        );
+        try renderCFunction(ctx, "", function, writer);
         try writer.writeByte('\n');
+        try renderZigMapper(ctx, "", function, writer);
         try writer.writeByte('\n');
     }
 
+    var tmp_args: std.ArrayList(ParameterType) = try .initCapacity(ctx.allocator, 10);
+    defer tmp_args.deinit(ctx.allocator);
+    for (ctx.spec.objects) |obj| {
+        logger.debug(
+            "Generating object: {s}, with {} methods",
+            .{ obj.name, obj.methods.len },
+        );
+        _ = try writer.write("pub const ");
+        try convertSnakeToPascal(obj.name, writer);
+        _ = try writer.write(" = opaque {\n");
+        for (obj.methods) |function| {
+            logger.debug(
+                "Generating C function (method): {s}, has {} args, return {s}",
+                .{ function.name, function.args.len, if (function.returns) |rt| rt.type else "void" },
+            );
+            tmp_args.clearRetainingCapacity();
+            try tmp_args.append(ctx.allocator, .{
+                .type = try std.fmt.allocPrint(ctx.allocator, "object.{s}", .{obj.name}),
+                .name = "self",
+                .pointer = .mutable,
+                .passed_with_ownership = false,
+            });
+            try tmp_args.appendSlice(ctx.allocator, function.args);
+            var tmp_fn = function;
+            tmp_fn.args = tmp_args.items;
+            try renderCFunction(ctx, obj.name, tmp_fn, writer);
+
+            try writer.writeByte('\n');
+
+            try renderZigMapper(ctx, obj.name, tmp_fn, writer);
+            try writer.writeByte('\n');
+        }
+        _ = try writer.write("};\n");
+    }
+
+    for (ctx.spec.structs) |structt| {
+        try renderStruct(ctx, structt, writer);
+    }
+    // ------------------------For C extern functions------------------------
     try writer.flush();
-    return results.toOwnedSlice();
+    return results.toOwnedSliceSentinel(0);
 }
 
-fn writeComment(comment_: []const u8, kind: enum { normal, doc, top }, writer: *std.Io.Writer) !void {
+fn renderComment(comment_: []const u8, kind: enum { normal, doc, top }, writer: *std.Io.Writer) !void {
     const comment = std.mem.trim(u8, comment_, &std.ascii.whitespace);
     var line_iter = std.mem.splitAny(u8, comment, "\n");
     while (line_iter.next()) |line| {
@@ -144,7 +258,7 @@ const QueryResult = union(enum) {
     object: Object,
 };
 
-fn queryRef(spec: Yml, query: []const u8) ?QueryResult {
+fn queryRef(ctx: *Context, query: []const u8) ?QueryResult {
     // Query format: stuff.inner
     var split_iter = std.mem.splitAny(u8, query, ".");
     const stuff = split_iter.next() orelse return null;
@@ -153,7 +267,7 @@ fn queryRef(spec: Yml, query: []const u8) ?QueryResult {
     const tag = std.meta.stringToEnum(QueryResultTag, stuff) orelse return null;
     switch (tag) {
         inline else => |field| {
-            const items = @field(spec, @tagName(field) ++ "s");
+            const items = @field(ctx.spec, @tagName(field) ++ "s");
             for (items) |item| {
                 if (std.mem.eql(u8, item.name, inner)) {
                     return @unionInit(QueryResult, @tagName(field), item);
@@ -165,7 +279,7 @@ fn queryRef(spec: Yml, query: []const u8) ?QueryResult {
     return null;
 }
 
-fn renderTypeName(spec: Yml, type_name: []const u8, writer: *std.Io.Writer) !void {
+fn renderTypeName(ctx: *Context, type_name: []const u8, writer: *std.Io.Writer) !void {
     const prefined_type_map: std.StaticStringMap([]const u8) = .initComptime(.{
         .{ "bool", "Bool" },
         .{ "string_with_default_empty", "StringView" },
@@ -198,8 +312,12 @@ fn renderTypeName(spec: Yml, type_name: []const u8, writer: *std.Io.Writer) !voi
         _ = try writer.write(name);
         return;
     }
-    if (queryRef(spec, type_name)) |query_result| {
+    if (queryRef(ctx, type_name)) |query_result| {
         switch (query_result) {
+            .callback => |cb| {
+                try convertSnakeToPascal(cb.name, writer);
+                _ = try writer.write("CallbackInfo");
+            },
             inline else => |value| {
                 try convertSnakeToPascal(value.name, writer);
             },
@@ -209,50 +327,57 @@ fn renderTypeName(spec: Yml, type_name: []const u8, writer: *std.Io.Writer) !voi
     }
 }
 
-fn renderCParam(spec: Yml, param: ParameterType, writer: *std.Io.Writer) !void {
-    const array_start = "array<";
-    if (std.mem.startsWith(u8, param.type, array_start)) {
-        _ = try writer.write(param.name.?[0 .. param.name.?.len - 1]);
+fn renderCParam(ctx: *Context, param: ParameterType, writer: *std.Io.Writer) !void {
+    if (std.mem.startsWith(u8, param.type, ARRAY_START)) {
+        _ = try writer.write(param.name.?);
         _ = try writer.write("Count: usize,");
 
         _ = try writer.write(param.name.?);
         try writer.writeByte(':');
         try renderPtrAndOptional(param.optional, param.pointer, writer);
-        try renderTypeName(spec, param.type[array_start.len .. param.type.len - 1], writer);
+        try renderTypeName(ctx, param.type[ARRAY_START.len .. param.type.len - 1], writer);
     } else {
         _ = try writer.write(param.name.?);
         try writer.writeByte(':');
         try renderPtrAndOptional(param.optional, param.pointer, writer);
-        try renderTypeName(spec, param.type, writer);
+        try renderTypeName(ctx, param.type, writer);
     }
 }
 
-fn renderParam(spec: Yml, param: ParameterType, writer: *std.Io.Writer) !void {
-    _ = try writer.write(param.name.?);
-    try writer.writeByte(':');
-    try renderPtrAndOptional(param.optional, param.pointer, writer);
-    try renderTypeName(spec, param.type, writer);
+fn renderCFunctionName(ctx: *Context, prefix: []const u8, function: Function, writer: *std.Io.Writer) !void {
+    _ = ctx;
+    try convertSnakeToPascal(prefix, writer);
+
+    try convertSnakeToPascal(function.name, writer);
 }
 
-fn renderCFunction(spec: Yml, function: Function, writer: *std.Io.Writer) !void {
+fn renderCFunction(ctx: *Context, prefix: []const u8, function: Function, writer: *std.Io.Writer) !void {
+    // TODO: check for callback
     _ = try writer.write("extern \"C\" fn wgpu");
-    try convertSnakeToPascal(function.name, writer);
+    try renderCFunctionName(ctx, prefix, function, writer);
 
     try writer.writeByte('(');
     for (function.args) |arg| {
-        try renderCParam(spec, arg, writer);
+        try renderCParam(ctx, arg, writer);
+        try writer.writeByte(',');
+    }
+    if (function.callback) |cb| {
+        try renderCParam(ctx, .{
+            .name = "callback",
+            .type = cb,
+        }, writer);
         try writer.writeByte(',');
     }
     try writer.writeByte(')');
 
     if (function.returns) |rt| {
         try renderPtrAndOptional(rt.optional, rt.pointer, writer);
-        try renderTypeName(spec, rt.type, writer);
+        try renderTypeName(ctx, rt.type, writer);
     } else {
         _ = try writer.write("void");
     }
 
-    try writer.writeByte(';');
+    _ = try writer.write(";\n");
 }
 
 fn renderPtrAndOptional(
@@ -270,69 +395,162 @@ fn renderPtrAndOptional(
     }
 }
 
+fn renderStruct(ctx: *Context, structt: Struct, writer: *std.Io.Writer) !void {
+    _ = try writer.write("pub const ");
+    try convertSnakeToPascal(structt.name, writer);
+    _ = try writer.write(" = extern struct {\n");
+    if (std.mem.eql(u8, structt.type, "extensible") //
+    or std.mem.eql(u8, structt.type, "extensible_callback_arg")) {
+        _ = try writer.write("chain: ChainedStruct,\n");
+    } else if (std.mem.eql(u8, structt.type, "extension")) {
+        _ = try writer.write("chain: ?*ChainedStruct,\n");
+    } else if (std.mem.eql(u8, structt.type, "standalone")) {} else {
+        //
+    }
+    for (structt.members) |member| {
+        if (member.doc.len > 0) {
+            try renderComment(member.doc, .doc, writer);
+        }
+        if (std.mem.startsWith(u8, member.type, ARRAY_START)) {
+            _ = try writer.write(member.name.?);
+            _ = try writer.write("Count: usize,\n");
+
+            try writer.print("@\"{s}\": ", .{member.name.?});
+            try renderPtrAndOptional(member.optional, member.pointer, writer);
+            try renderTypeName(ctx, member.type[ARRAY_START.len .. member.type.len - 1], writer);
+        } else {
+            try writer.print("@\"{s}\": ", .{member.name.?});
+            try renderPtrAndOptional(member.optional, member.pointer, writer);
+            try renderTypeName(ctx, member.type, writer);
+        }
+        _ = try writer.write(",\n");
+    }
+    if (structt.free_members) {
+        logger.debug(
+            "Generating free members function for struct: {s}",
+            .{structt.name},
+        );
+        const args = try ctx.allocator.alloc(ParameterType, 1);
+        args[0] = .{
+            .name = "self",
+            .type = try std.fmt.allocPrint(ctx.allocator, "struct.{s}", .{structt.name}),
+            .pointer = .mutable,
+            .passed_with_ownership = true,
+        };
+        const function: Function = .{
+            .name = "FreeMembers",
+            .returns = null,
+            .args = args,
+        };
+        try renderCFunction(ctx, structt.name, function, writer);
+        _ = try writer.write("const deinit = wgpu");
+        try renderCFunctionName(ctx, structt.name, function, writer);
+        _ = try writer.write(";\n");
+    }
+    _ = try writer.write("};\n");
+}
+
+fn renderZigMapper(ctx: *Context, prefix: []const u8, function: Function, writer: *std.Io.Writer) !void {
+    var has_array = false;
+    for (function.args) |arg| {
+        has_array = has_array or std.mem.startsWith(u8, arg.name.?, ARRAY_START);
+    }
+    if (function.doc.len > 0) {
+        try renderComment(function.doc, .doc, writer);
+    }
+    for (function.args) |arg| {
+        if (arg.doc.len > 0) {
+            try renderComment(arg.name.?, .doc, writer);
+            try renderComment(arg.doc, .doc, writer);
+        }
+    }
+    if (function.returns) |rt| {
+        if (rt.doc.len > 0) {
+            try renderComment("Return", .doc, writer);
+            try renderComment(rt.doc, .doc, writer);
+        }
+    }
+    if (has_array) {
+        // generate mapper with slice
+    } else {
+        // rename
+        _ = try writer.write("const ");
+        try convertSnakeToCamel(function.name, writer);
+
+        _ = try writer.write("=wgpu");
+        try renderCFunctionName(ctx, prefix, function, writer);
+        _ = try writer.write(";\n");
+    }
+}
+
+pub const Context = struct {
+    spec: Yml,
+    allocator: std.mem.Allocator,
+};
+
 pub const PointerType = enum {
     mutable,
     immutable,
 };
 
 pub const Base = struct {
-    name: []u8,
-    namespace: []u8 = "",
-    doc: []u8 = "",
+    name: []const u8,
+    namespace: []const u8 = "",
+    doc: []const u8 = "",
     extended: bool = false,
 };
 
 pub const Yml = struct {
-    copyright: []u8,
-    name: []u8,
-    doc: []u8,
+    copyright: []const u8,
+    name: []const u8,
+    doc: []const u8,
     enum_prefix: u16,
 
-    constants: []Constant = &[_]Constant{},
-    typedefs: []Typedef = &[_]Typedef{},
-    enums: []Enum = &[_]Enum{},
-    bitflags: []Bitflag = &[_]Bitflag{},
-    structs: []Struct = &[_]Struct{},
-    callbacks: []Callback = &[_]Callback{},
-    functions: []Function = &[_]Function{},
-    objects: []Object = &[_]Object{},
+    constants: []const Constant = &[_]Constant{},
+    typedefs: []const Typedef = &[_]Typedef{},
+    enums: []const Enum = &[_]Enum{},
+    bitflags: []const Bitflag = &[_]Bitflag{},
+    structs: []const Struct = &[_]Struct{},
+    callbacks: []const Callback = &[_]Callback{},
+    functions: []const Function = &[_]Function{},
+    objects: []const Object = &[_]Object{},
 };
 
 pub const Constant = struct {
     // Base (yaml:",inline")
-    name: []u8,
-    namespace: []u8 = "",
-    doc: []u8 = "",
+    name: []const u8,
+    namespace: []const u8 = "",
+    doc: []const u8 = "",
     extended: bool = false,
 
-    value: []u8,
+    value: []const u8,
 };
 
 pub const Typedef = struct {
     // Base (yaml:",inline")
-    name: []u8,
-    namespace: []u8 = "",
-    doc: []u8 = "",
+    name: []const u8,
+    namespace: []const u8 = "",
+    doc: []const u8 = "",
     extended: bool = false,
 
-    type: []u8,
+    type: []const u8,
 };
 
 pub const Enum = struct {
     // Base (yaml:",inline")
-    name: []u8,
-    namespace: []u8 = "",
-    doc: []u8 = "",
+    name: []const u8,
+    namespace: []const u8 = "",
+    doc: []const u8 = "",
     extended: bool = false,
 
-    entries: []?EnumEntry = &[_]?EnumEntry{},
+    entries: []const ?EnumEntry = &[_]?EnumEntry{},
 };
 
 pub const EnumEntry = struct {
     // Base (yaml:",inline")
-    name: []u8,
-    namespace: []u8 = "",
-    doc: []u8 = "",
+    name: []const u8,
+    namespace: []const u8 = "",
+    doc: []const u8 = "",
     extended: bool = false,
 
     value: ?u16 = null,
@@ -340,30 +558,30 @@ pub const EnumEntry = struct {
 
 pub const Bitflag = struct {
     // Base (yaml:",inline")
-    name: []u8,
-    namespace: []u8 = "",
-    doc: []u8 = "",
+    name: []const u8,
+    namespace: []const u8 = "",
+    doc: []const u8 = "",
     extended: bool = false,
 
-    entries: []BitflagEntry = &[_]BitflagEntry{},
+    entries: []const BitflagEntry = &[_]BitflagEntry{},
 };
 
 pub const BitflagEntry = struct {
     // Base (yaml:",inline")
-    name: []u8,
-    namespace: []u8 = "",
-    doc: []u8 = "",
+    name: []const u8,
+    namespace: []const u8 = "",
+    doc: []const u8 = "",
     extended: bool = false,
 
-    value: ?[]u8 = null,
-    value_combination: [][]u8 = &[_][]u8{},
+    value: ?[]const u8 = null,
+    value_combination: [][]const u8 = &[_][]const u8{},
 };
 
 pub const ParameterType = struct {
-    name: ?[]u8 = null,
-    namespace: []u8 = "",
-    doc: []u8 = "",
-    type: []u8,
+    name: ?[]const u8 = null,
+    namespace: []const u8 = "",
+    doc: []const u8 = "",
+    type: []const u8,
     passed_with_ownership: ?bool = null,
     pointer: ?PointerType = null,
     optional: bool = false,
@@ -372,46 +590,48 @@ pub const ParameterType = struct {
 
 pub const Callback = struct {
     // Base (yaml:",inline")
-    name: []u8,
-    namespace: []u8 = "",
-    doc: []u8 = "",
+    name: []const u8,
+    namespace: []const u8 = "",
+    doc: []const u8 = "",
     extended: bool = false,
 
-    style: []u8,
+    style: []const u8,
     args: []ParameterType = &[_]ParameterType{},
 };
 
 pub const Function = struct {
     // Base (yaml:",inline")
-    name: []u8,
-    namespace: []u8 = "",
-    doc: []u8 = "",
+    name: []const u8,
+    namespace: []const u8 = "",
+    doc: []const u8 = "",
     extended: bool = false,
 
     returns: ?ParameterType = null,
-    callback: ?[]u8 = null,
+    callback: ?[]const u8 = null,
     args: []ParameterType = &[_]ParameterType{},
 };
 
 pub const Struct = struct {
     // Base (yaml:",inline")
-    name: []u8,
-    namespace: []u8 = "",
-    doc: []u8 = "",
+    name: []const u8,
+    namespace: []const u8 = "",
+    doc: []const u8 = "",
     extended: bool = false,
 
-    type: []u8,
+    type: []const u8,
     free_members: bool = false,
-    members: []ParameterType = &[_]ParameterType{},
-    extends: [][]u8 = &[_][]u8{},
+    members: []const ParameterType = &[_]ParameterType{},
+    extends: []const []const u8 = &[_][]const u8{},
 };
 
 pub const Object = struct {
     // Base (yaml:",inline")
-    name: []u8,
-    namespace: []u8 = "",
-    doc: []u8 = "",
+    name: []const u8,
+    namespace: []const u8 = "",
+    doc: []const u8 = "",
     extended: bool = false,
 
-    methods: []Function = &[_]Function{},
+    methods: []const Function = &[_]Function{},
 };
+
+const ARRAY_START = "array<";

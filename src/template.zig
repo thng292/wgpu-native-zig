@@ -2,6 +2,11 @@
 
 const std = @import("std");
 
+test {
+    const tests = @import("test.zig");
+    std.testing.refAllDecls(tests);
+}
+
 // These are some hard-coded values.
 const UINT32_MAX = std.math.maxInt(u32);
 const UINT64_MAX = std.math.maxInt(u64);

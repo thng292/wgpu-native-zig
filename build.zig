@@ -1,4 +1,5 @@
 const std = @import("std");
+const builtin = @import("builtin");
 
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
@@ -6,7 +7,7 @@ pub fn build(b: *std.Build) void {
     const linkage = b.option(std.builtin.LinkMode, "linkage", "wgpu-native link mode") orelse .static;
 
     const mod = b.addModule("wgpu-native-zig", .{
-        .root_source_file = b.path("src/translated-webgpu.h.zig"),
+        .root_source_file = b.path("src/webgpu.json.zig"),
         .target = target,
         .link_libc = true,
         .link_libcpp = true,
@@ -34,7 +35,10 @@ pub fn build(b: *std.Build) void {
         .name = "translate",
         .root_module = b.createModule(.{
             .root_source_file = b.path("src/gen.zig"),
-            .target = target,
+            .target = .{
+                .query = .fromTarget(&builtin.target),
+                .result = builtin.target,
+            },
             .optimize = optimize,
         }),
     });
