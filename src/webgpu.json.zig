@@ -1255,6 +1255,186 @@ pub const TextureUsage = packed struct(Flags) {
     transient_attachment: bool,
     __unused: u58,
 };
+/// TODO
+/// status
+/// TODO
+/// message
+/// TODO
+const BufferMapCallbackInfo = extern struct {
+    nextInChain: ?*ChainedStruct,
+    mode: CallbackMode,
+    callback: *fn (
+        status: MapAsyncStatus,
+        message: StringView,
+    ) void,
+    userdata1: ?*void,
+    userdata2: ?*void,
+};
+/// TODO
+/// status
+/// TODO
+/// compilation_info
+/// This argument contains multiple @ref ImplementationAllocatedStructChain roots.
+/// Arbitrary chains must be handled gracefully by the application!
+const CompilationInfoCallbackInfo = extern struct {
+    nextInChain: ?*ChainedStruct,
+    mode: CallbackMode,
+    callback: *fn (
+        status: CompilationInfoRequestStatus,
+        compilation_info: *const CompilationInfo,
+    ) void,
+    userdata1: ?*void,
+    userdata2: ?*void,
+};
+/// TODO
+/// status
+/// TODO
+/// pipeline
+/// TODO
+/// message
+/// TODO
+const CreateComputePipelineAsyncCallbackInfo = extern struct {
+    nextInChain: ?*ChainedStruct,
+    mode: CallbackMode,
+    callback: *fn (
+        status: CreatePipelineAsyncStatus,
+        pipeline: ComputePipeline,
+        message: StringView,
+    ) void,
+    userdata1: ?*void,
+    userdata2: ?*void,
+};
+/// TODO
+/// status
+/// TODO
+/// pipeline
+/// TODO
+/// message
+/// TODO
+const CreateRenderPipelineAsyncCallbackInfo = extern struct {
+    nextInChain: ?*ChainedStruct,
+    mode: CallbackMode,
+    callback: *fn (
+        status: CreatePipelineAsyncStatus,
+        pipeline: RenderPipeline,
+        message: StringView,
+    ) void,
+    userdata1: ?*void,
+    userdata2: ?*void,
+};
+/// TODO
+/// device
+/// Pointer to the device which was lost. This is always a non-null pointer.
+/// The pointed-to @ref WGPUDevice will be null if, and only if, either:
+/// (1) The `reason` is @ref WGPUDeviceLostReason_FailedCreation.
+/// (2) The last ref of the device has been (or is being) released: see @ref DeviceRelease.
+/// reason
+/// An error code explaining why the device was lost.
+/// message
+/// A @ref LocalizableHumanReadableMessageString describing why the device was lost.
+const DeviceLostCallbackInfo = extern struct {
+    nextInChain: ?*ChainedStruct,
+    mode: CallbackMode,
+    callback: *fn (
+        device: *const Device,
+        reason: DeviceLostReason,
+        message: StringView,
+    ) void,
+    userdata1: ?*void,
+    userdata2: ?*void,
+};
+/// TODO
+/// status
+/// See @ref WGPUPopErrorScopeStatus.
+/// type
+/// The type of the error caught by the scope, or @ref WGPUErrorType_NoError if there was none.
+/// If the `status` is not @ref WGPUPopErrorScopeStatus_Success, this is @ref WGPUErrorType_NoError.
+/// message
+/// If the `status` is not @ref WGPUPopErrorScopeStatus_Success **or**
+/// the `type` is not @ref WGPUErrorType_NoError, this is a non-empty
+/// @ref LocalizableHumanReadableMessageString;
+/// otherwise, this is an empty string.
+const PopErrorScopeCallbackInfo = extern struct {
+    nextInChain: ?*ChainedStruct,
+    mode: CallbackMode,
+    callback: *fn (
+        status: PopErrorScopeStatus,
+        type: ErrorType,
+        message: StringView,
+    ) void,
+    userdata1: ?*void,
+    userdata2: ?*void,
+};
+/// TODO
+/// status
+/// See @ref WGPUQueueWorkDoneStatus.
+/// message
+/// If the `status` is not @ref WGPUQueueWorkDoneStatus_Success,
+/// this is a non-empty @ref LocalizableHumanReadableMessageString;
+/// otherwise, this is an empty string.
+const QueueWorkDoneCallbackInfo = extern struct {
+    nextInChain: ?*ChainedStruct,
+    mode: CallbackMode,
+    callback: *fn (
+        status: QueueWorkDoneStatus,
+        message: StringView,
+    ) void,
+    userdata1: ?*void,
+    userdata2: ?*void,
+};
+/// TODO
+/// status
+/// TODO
+/// adapter
+/// TODO
+/// message
+/// TODO
+const RequestAdapterCallbackInfo = extern struct {
+    nextInChain: ?*ChainedStruct,
+    mode: CallbackMode,
+    callback: *fn (
+        status: RequestAdapterStatus,
+        adapter: Adapter,
+        message: StringView,
+    ) void,
+    userdata1: ?*void,
+    userdata2: ?*void,
+};
+/// TODO
+/// status
+/// TODO
+/// device
+/// TODO
+/// message
+/// TODO
+const RequestDeviceCallbackInfo = extern struct {
+    nextInChain: ?*ChainedStruct,
+    mode: CallbackMode,
+    callback: *fn (
+        status: RequestDeviceStatus,
+        device: Device,
+        message: StringView,
+    ) void,
+    userdata1: ?*void,
+    userdata2: ?*void,
+};
+/// TODO
+/// device
+/// TODO
+/// type
+/// TODO
+/// message
+/// TODO
+const UncapturedErrorCallbackInfo = extern struct {
+    nextInChain: ?*ChainedStruct,
+    callback: *fn (
+        device: *const Device,
+        type: ErrorType,
+        message: StringView,
+    ) void,
+    userdata1: ?*void,
+    userdata2: ?*void,
+};
 extern "C" fn wgpuCreateInstance(
     descriptor: ?*const InstanceDescriptor,
 ) Instance;

@@ -145,7 +145,44 @@ fn generateZigCode(ctx: *Context) ![:0]u8 {
         _ = try writer.write("};\n");
     }
     for (ctx.spec.callbacks) |cb| {
-        _ = cb;
+        logger.debug(
+            "Generating callback: {s}, has {} args, style {s}",
+            .{ cb.name, cb.args.len, cb.style },
+        );
+        if (cb.doc.len > 0) {
+            try renderComment(cb.doc, .doc, writer);
+        }
+        for (cb.args) |arg| {
+            if (arg.doc.len > 0) {
+                try renderComment(arg.name.?, .doc, writer);
+                try renderComment(arg.doc, .doc, writer);
+            }
+        }
+        _ = try writer.write("const ");
+        try convertSnakeToPascal(cb.name, writer);
+        _ = try writer.write(
+            \\CallbackInfo = extern struct {
+            \\ nextInChain: ?*ChainedStruct,
+            \\
+        );
+        if (std.mem.eql(u8, cb.style, "callback_mode")) {
+            _ = try writer.write("mode: CallbackMode,\n");
+        }
+        _ = try writer.write("callback: *");
+        // Callback type w/o *
+        _ = try writer.write("fn (");
+        for (cb.args) |arg| {
+            try renderCParam(ctx, arg, writer);
+            try writer.writeByte(',');
+        }
+        _ = try writer.write(") void,\n");
+
+        _ = try writer.write(
+            \\userdata1: ?*void,
+            \\userdata2: ?*void,
+            \\};
+            \\
+        );
     }
 
     // ------------------------For C extern functions------------------------

@@ -1,7 +1,9 @@
 # TODO
 - [x] Method mapping
-- [ ] Callbacks
+- [x] Callbacks
 - [ ] Helpers
     - [ ] Sync funtion
+- [ ] Tests
+- [ ] Examples
 - [x] Mapping free_members function to deinit
 - [x] Struct fields
