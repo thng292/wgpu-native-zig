@@ -384,7 +384,7 @@ fn renderCParam(ctx: *Context, param: ParameterType, writer: *std.Io.Writer) !vo
         _ = try writer.write(param.name.?);
         try writer.writeByte(':');
         if (isParamObject(param)) {
-            try renderOptionalAndPtr(param.optional, .mutable, writer);
+            try renderOptionalAndPtr(param.optional, param.pointer orelse .mutable, writer);
         } else {
             try renderOptionalAndPtr(param.optional, param.pointer, writer);
         }
@@ -418,7 +418,11 @@ fn renderCFunction(ctx: *Context, prefix: []const u8, function: Function, writer
     try writer.writeByte(')');
 
     if (function.returns) |rt| {
-        try renderOptionalAndPtr(rt.optional, rt.pointer, writer);
+        if (isParamObject(rt)) {
+            try renderOptionalAndPtr(rt.optional, rt.pointer orelse .mutable, writer);
+        } else {
+            try renderOptionalAndPtr(rt.optional, rt.pointer, writer);
+        }
         try renderTypeName(ctx, rt.type, writer);
     } else {
         _ = try writer.write("void");
@@ -468,7 +472,7 @@ fn renderStruct(ctx: *Context, structt: Struct, writer: *std.Io.Writer) !void {
         } else {
             try writer.print("@\"{s}\": ", .{member.name.?});
             if (isParamObject(member)) {
-                try renderOptionalAndPtr(member.optional, .mutable, writer);
+                try renderOptionalAndPtr(member.optional, member.pointer orelse .mutable, writer);
             } else {
                 try renderOptionalAndPtr(member.optional, member.pointer, writer);
             }
@@ -548,8 +552,11 @@ fn renderZigMapper(ctx: *Context, prefix: []const u8, function: Function, writer
         try writer.writeByte(')');
 
         if (function.returns) |rt| {
-            try renderOptionalAndPtr(rt.optional, rt.pointer, writer);
-            try renderTypeName(ctx, rt.type, writer);
+            if (isParamObject(rt)) {
+                try renderOptionalAndPtr(rt.optional, rt.pointer orelse .mutable, writer);
+            } else {
+                try renderOptionalAndPtr(rt.optional, rt.pointer, writer);
+            }
         } else {
             _ = try writer.write("void");
         }

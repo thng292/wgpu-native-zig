@@ -1345,7 +1345,7 @@ const DeviceLostCallbackInfo = extern struct {
     nextInChain: ?*ChainedStruct,
     mode: CallbackMode,
     callback: *fn (
-        device: ?*Device,
+        device: ?*const Device,
         reason: DeviceLostReason,
         message: StringView,
         user_data1: ?*void,
@@ -1447,7 +1447,7 @@ const RequestDeviceCallbackInfo = extern struct {
 const UncapturedErrorCallbackInfo = extern struct {
     nextInChain: ?*ChainedStruct,
     callback: *fn (
-        device: ?*Device,
+        device: ?*const Device,
         type: ErrorType,
         message: StringView,
         user_data1: ?*void,
@@ -1458,7 +1458,7 @@ const UncapturedErrorCallbackInfo = extern struct {
 };
 extern "C" fn wgpuCreateInstance(
     descriptor: ?*const InstanceDescriptor,
-) Instance;
+) *Instance;
 
 /// Create a WGPUInstance
 /// descriptor
@@ -1750,7 +1750,7 @@ pub const CommandEncoder = opaque {
     extern "C" fn wgpuCommandEncoderFinish(
         self: *CommandEncoder,
         descriptor: ?*const CommandBufferDescriptor,
-    ) CommandBuffer;
+    ) *CommandBuffer;
 
     /// TODO
     /// descriptor
@@ -1762,7 +1762,7 @@ pub const CommandEncoder = opaque {
     extern "C" fn wgpuCommandEncoderBeginComputePass(
         self: *CommandEncoder,
         descriptor: ?*const ComputePassDescriptor,
-    ) ComputePassEncoder;
+    ) *ComputePassEncoder;
 
     /// TODO
     /// descriptor
@@ -1774,7 +1774,7 @@ pub const CommandEncoder = opaque {
     extern "C" fn wgpuCommandEncoderBeginRenderPass(
         self: *CommandEncoder,
         descriptor: *const RenderPassDescriptor,
-    ) RenderPassEncoder;
+    ) *RenderPassEncoder;
 
     /// TODO
     /// descriptor
@@ -2075,7 +2075,7 @@ pub const ComputePipeline = opaque {
     extern "C" fn wgpuComputePipelineGetBindGroupLayout(
         self: *ComputePipeline,
         group_index: u32,
-    ) BindGroupLayout;
+    ) *BindGroupLayout;
 
     /// TODO
     /// group_index
@@ -2098,7 +2098,7 @@ pub const Device = opaque {
     extern "C" fn wgpuDeviceCreateBindGroup(
         self: *Device,
         descriptor: *const BindGroupDescriptor,
-    ) BindGroup;
+    ) *BindGroup;
 
     /// TODO
     /// descriptor
@@ -2110,7 +2110,7 @@ pub const Device = opaque {
     extern "C" fn wgpuDeviceCreateBindGroupLayout(
         self: *Device,
         descriptor: *const BindGroupLayoutDescriptor,
-    ) BindGroupLayout;
+    ) *BindGroupLayout;
 
     /// TODO
     /// descriptor
@@ -2122,7 +2122,7 @@ pub const Device = opaque {
     extern "C" fn wgpuDeviceCreateBuffer(
         self: *Device,
         descriptor: *const BufferDescriptor,
-    ) ?Buffer;
+    ) ?*Buffer;
 
     /// TODO
     ///
@@ -2137,7 +2137,7 @@ pub const Device = opaque {
     extern "C" fn wgpuDeviceCreateCommandEncoder(
         self: *Device,
         descriptor: ?*const CommandEncoderDescriptor,
-    ) CommandEncoder;
+    ) *CommandEncoder;
 
     /// TODO
     /// descriptor
@@ -2149,7 +2149,7 @@ pub const Device = opaque {
     extern "C" fn wgpuDeviceCreateComputePipeline(
         self: *Device,
         descriptor: *const ComputePipelineDescriptor,
-    ) ComputePipeline;
+    ) *ComputePipeline;
 
     /// TODO
     /// descriptor
@@ -2172,7 +2172,7 @@ pub const Device = opaque {
     extern "C" fn wgpuDeviceCreatePipelineLayout(
         self: *Device,
         descriptor: *const PipelineLayoutDescriptor,
-    ) PipelineLayout;
+    ) *PipelineLayout;
 
     /// TODO
     /// descriptor
@@ -2184,7 +2184,7 @@ pub const Device = opaque {
     extern "C" fn wgpuDeviceCreateQuerySet(
         self: *Device,
         descriptor: *const QuerySetDescriptor,
-    ) QuerySet;
+    ) *QuerySet;
 
     /// TODO
     /// descriptor
@@ -2207,7 +2207,7 @@ pub const Device = opaque {
     extern "C" fn wgpuDeviceCreateRenderBundleEncoder(
         self: *Device,
         descriptor: *const RenderBundleEncoderDescriptor,
-    ) RenderBundleEncoder;
+    ) *RenderBundleEncoder;
 
     /// TODO
     /// descriptor
@@ -2219,7 +2219,7 @@ pub const Device = opaque {
     extern "C" fn wgpuDeviceCreateRenderPipeline(
         self: *Device,
         descriptor: *const RenderPipelineDescriptor,
-    ) RenderPipeline;
+    ) *RenderPipeline;
 
     /// TODO
     /// descriptor
@@ -2231,7 +2231,7 @@ pub const Device = opaque {
     extern "C" fn wgpuDeviceCreateSampler(
         self: *Device,
         descriptor: ?*const SamplerDescriptor,
-    ) Sampler;
+    ) *Sampler;
 
     /// TODO
     /// descriptor
@@ -2243,7 +2243,7 @@ pub const Device = opaque {
     extern "C" fn wgpuDeviceCreateShaderModule(
         self: *Device,
         descriptor: *const ShaderModuleDescriptor,
-    ) ShaderModule;
+    ) *ShaderModule;
 
     /// TODO
     /// descriptor
@@ -2255,7 +2255,7 @@ pub const Device = opaque {
     extern "C" fn wgpuDeviceCreateTexture(
         self: *Device,
         descriptor: *const TextureDescriptor,
-    ) Texture;
+    ) *Texture;
 
     /// TODO
     /// descriptor
@@ -2327,7 +2327,7 @@ pub const Device = opaque {
 
     extern "C" fn wgpuDeviceGetQueue(
         self: *Device,
-    ) Queue;
+    ) *Queue;
 
     /// TODO
     /// Return
@@ -2379,7 +2379,7 @@ pub const Instance = opaque {
     extern "C" fn wgpuInstanceCreateSurface(
         self: *Instance,
         descriptor: *const SurfaceDescriptor,
-    ) Surface;
+    ) *Surface;
 
     /// Creates a @ref WGPUSurface, see @ref Surface-Creation for more details.
     /// descriptor
@@ -2781,7 +2781,7 @@ pub const RenderBundleEncoder = opaque {
     extern "C" fn wgpuRenderBundleEncoderFinish(
         self: *RenderBundleEncoder,
         descriptor: ?*const RenderBundleDescriptor,
-    ) RenderBundle;
+    ) *RenderBundle;
 
     /// TODO
     /// descriptor
@@ -3113,7 +3113,7 @@ pub const RenderPipeline = opaque {
     extern "C" fn wgpuRenderPipelineGetBindGroupLayout(
         self: *RenderPipeline,
         group_index: u32,
-    ) BindGroupLayout;
+    ) *BindGroupLayout;
 
     /// TODO
     /// group_index
@@ -3238,7 +3238,7 @@ pub const Texture = opaque {
     extern "C" fn wgpuTextureCreateView(
         self: *Texture,
         descriptor: ?*const TextureViewDescriptor,
-    ) TextureView;
+    ) *TextureView;
 
     /// TODO
     /// descriptor
