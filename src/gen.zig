@@ -138,10 +138,10 @@ fn generateZigCode(ctx: *Context) ![:0]u8 {
             if (entry.doc.len > 0) {
                 try renderComment(entry.doc, .doc, writer);
             }
-            try writer.print("@\"{s}\": bool,\n", .{entry.name});
+            try writer.print("@\"{s}\": bool = false,\n", .{entry.name});
             left -= 1;
         }
-        try writer.print("__unused: u{},\n", .{left + 1});
+        try writer.print("__unused: u{} = 0,\n", .{left + 1});
         _ = try writer.write("};\n");
     }
     for (ctx.spec.callbacks) |cb| {
@@ -172,10 +172,17 @@ fn generateZigCode(ctx: *Context) ![:0]u8 {
         // Callback type w/o *
         _ = try writer.write("fn (");
         for (cb.args) |arg| {
-            try renderCParam(ctx, arg, writer);
+            if (isParamObject(arg)) {
+                var arg_ = arg;
+                arg_.optional = true;
+                try renderCParam(ctx, arg_, writer);
+            } else {
+                try renderCParam(ctx, arg, writer);
+            }
             try writer.writeByte(',');
         }
-        _ = try writer.write(") void,\n");
+        _ = try writer.write("user_data1: ?*void, user_data2: ?*void,");
+        _ = try writer.write(") callconv(.C) void,\n");
 
         _ = try writer.write(
             \\userdata1: ?*void,
@@ -365,18 +372,22 @@ fn renderTypeName(ctx: *Context, type_name: []const u8, writer: *std.Io.Writer) 
 }
 
 fn renderCParam(ctx: *Context, param: ParameterType, writer: *std.Io.Writer) !void {
-    if (std.mem.startsWith(u8, param.type, ARRAY_START)) {
+    if (isParamArray(param)) {
         _ = try writer.write(param.name.?);
         _ = try writer.write("Count: usize,");
 
         _ = try writer.write(param.name.?);
         try writer.writeByte(':');
-        try renderPtrAndOptional(param.optional, param.pointer, writer);
+        try renderOptionalAndPtr(param.optional, param.pointer, writer);
         try renderTypeName(ctx, param.type[ARRAY_START.len .. param.type.len - 1], writer);
     } else {
         _ = try writer.write(param.name.?);
         try writer.writeByte(':');
-        try renderPtrAndOptional(param.optional, param.pointer, writer);
+        if (isParamObject(param)) {
+            try renderOptionalAndPtr(param.optional, .mutable, writer);
+        } else {
+            try renderOptionalAndPtr(param.optional, param.pointer, writer);
+        }
         try renderTypeName(ctx, param.type, writer);
     }
 }
@@ -389,7 +400,6 @@ fn renderCFunctionName(ctx: *Context, prefix: []const u8, function: Function, wr
 }
 
 fn renderCFunction(ctx: *Context, prefix: []const u8, function: Function, writer: *std.Io.Writer) !void {
-    // TODO: check for callback
     _ = try writer.write("extern \"C\" fn wgpu");
     try renderCFunctionName(ctx, prefix, function, writer);
 
@@ -408,7 +418,7 @@ fn renderCFunction(ctx: *Context, prefix: []const u8, function: Function, writer
     try writer.writeByte(')');
 
     if (function.returns) |rt| {
-        try renderPtrAndOptional(rt.optional, rt.pointer, writer);
+        try renderOptionalAndPtr(rt.optional, rt.pointer, writer);
         try renderTypeName(ctx, rt.type, writer);
     } else {
         _ = try writer.write("void");
@@ -417,7 +427,7 @@ fn renderCFunction(ctx: *Context, prefix: []const u8, function: Function, writer
     _ = try writer.write(";\n");
 }
 
-fn renderPtrAndOptional(
+fn renderOptionalAndPtr(
     optional: bool,
     pointer: ?PointerType,
     writer: *std.Io.Writer,
@@ -448,16 +458,20 @@ fn renderStruct(ctx: *Context, structt: Struct, writer: *std.Io.Writer) !void {
         if (member.doc.len > 0) {
             try renderComment(member.doc, .doc, writer);
         }
-        if (std.mem.startsWith(u8, member.type, ARRAY_START)) {
+        if (isParamArray(member)) {
             _ = try writer.write(member.name.?);
             _ = try writer.write("Count: usize,\n");
 
             try writer.print("@\"{s}\": ", .{member.name.?});
-            try renderPtrAndOptional(member.optional, member.pointer, writer);
+            try renderOptionalAndPtr(member.optional, member.pointer, writer);
             try renderTypeName(ctx, member.type[ARRAY_START.len .. member.type.len - 1], writer);
         } else {
             try writer.print("@\"{s}\": ", .{member.name.?});
-            try renderPtrAndOptional(member.optional, member.pointer, writer);
+            if (isParamObject(member)) {
+                try renderOptionalAndPtr(member.optional, .mutable, writer);
+            } else {
+                try renderOptionalAndPtr(member.optional, member.pointer, writer);
+            }
             try renderTypeName(ctx, member.type, writer);
         }
         _ = try writer.write(",\n");
@@ -480,7 +494,7 @@ fn renderStruct(ctx: *Context, structt: Struct, writer: *std.Io.Writer) !void {
             .args = args,
         };
         try renderCFunction(ctx, structt.name, function, writer);
-        _ = try writer.write("const deinit = wgpu");
+        _ = try writer.write("pub const deinit = wgpu");
         try renderCFunctionName(ctx, structt.name, function, writer);
         _ = try writer.write(";\n");
     }
@@ -490,7 +504,7 @@ fn renderStruct(ctx: *Context, structt: Struct, writer: *std.Io.Writer) !void {
 fn renderZigMapper(ctx: *Context, prefix: []const u8, function: Function, writer: *std.Io.Writer) !void {
     var has_array = false;
     for (function.args) |arg| {
-        has_array = has_array or std.mem.startsWith(u8, arg.name.?, ARRAY_START);
+        has_array = has_array or isParamArray(arg);
     }
     if (function.doc.len > 0) {
         try renderComment(function.doc, .doc, writer);
@@ -509,15 +523,67 @@ fn renderZigMapper(ctx: *Context, prefix: []const u8, function: Function, writer
     }
     if (has_array) {
         // generate mapper with slice
+        _ = try writer.write("pub fn ");
+        try convertSnakeToCamel(function.name, writer);
+
+        try writer.writeByte('(');
+        for (function.args) |arg| {
+            if (isParamArray(arg)) {
+                _ = try writer.write(arg.name.?);
+                _ = try writer.write(": []");
+                try renderOptionalAndPtr(arg.optional, arg.pointer, writer);
+                try renderTypeName(ctx, arg.type[ARRAY_START.len .. arg.type.len - 1], writer);
+            } else {
+                try renderCParam(ctx, arg, writer);
+            }
+            try writer.writeByte(',');
+        }
+        if (function.callback) |cb| {
+            try renderCParam(ctx, .{
+                .name = "callback",
+                .type = cb,
+            }, writer);
+            try writer.writeByte(',');
+        }
+        try writer.writeByte(')');
+
+        if (function.returns) |rt| {
+            try renderOptionalAndPtr(rt.optional, rt.pointer, writer);
+            try renderTypeName(ctx, rt.type, writer);
+        } else {
+            _ = try writer.write("void");
+        }
+
+        _ = try writer.write(" {\nwgpu");
+        try renderCFunctionName(ctx, prefix, function, writer);
+        _ = try writer.write("(");
+        // Call the C function
+        for (function.args) |arg| {
+            if (isParamArray(arg)) {
+                try writer.print("{s}.len, {s}.ptr", .{ arg.name.?, arg.name.? });
+            } else {
+                _ = try writer.write(arg.name.?);
+            }
+            try writer.writeByte(',');
+        }
+        _ = try writer.write(");}\n");
     } else {
         // rename
-        _ = try writer.write("const ");
+        _ = try writer.write("pub const ");
         try convertSnakeToCamel(function.name, writer);
 
         _ = try writer.write("=wgpu");
         try renderCFunctionName(ctx, prefix, function, writer);
         _ = try writer.write(";\n");
     }
+}
+
+fn isParamArray(param: ParameterType) bool {
+    return std.mem.startsWith(u8, param.type, ARRAY_START);
+}
+
+fn isParamObject(param: ParameterType) bool {
+    return std.mem.startsWith(u8, param.type, "object.");
 }
 
 pub const Context = struct {

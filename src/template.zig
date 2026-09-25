@@ -1,6 +1,7 @@
 // --------------------TEMPLATE_START--------------------
 
 const std = @import("std");
+const helpers = @import("helpers.zig");
 
 test {
     const tests = @import("test.zig");
