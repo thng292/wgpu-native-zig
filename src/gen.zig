@@ -500,7 +500,7 @@ fn renderStruct(ctx: *Context, structt: Struct, writer: *std.Io.Writer) !void {
         args[0] = .{
             .name = "self",
             .type = try std.fmt.allocPrint(ctx.allocator, "struct.{s}", .{structt.name}),
-            .pointer = .mutable,
+            .pointer = null,
             .passed_with_ownership = true,
         };
         const function: Function = .{
