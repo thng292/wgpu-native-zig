@@ -51,6 +51,7 @@ pub const StringView = extern struct {
 
     /// Helper to convert the StringView into a Zig slice if data is not null.
     pub fn toSlice(self: StringView) ?[]const u8 {
+        if (self.length == 0) return null;
         const ptr = self.data orelse return null;
         return ptr[0..self.length];
     }
@@ -3472,7 +3473,7 @@ pub const TextureView = opaque {
     pub const deinit = wgpuTextureViewRelease;
 };
 pub const AdapterInfo = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     vendor: StringView,
     /// TODO
@@ -3499,7 +3500,7 @@ pub const AdapterInfo = extern struct {
     pub const deinit = wgpuAdapterInfoFreeMembers;
 };
 pub const BindGroupDescriptor = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     label: StringView,
     /// TODO
@@ -3509,7 +3510,7 @@ pub const BindGroupDescriptor = extern struct {
     entries: *const BindGroupEntry,
 };
 pub const BindGroupEntry = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// Binding index in the bind group.
     binding: u32,
     /// Set this if the binding is a buffer object.
@@ -3530,7 +3531,7 @@ pub const BindGroupEntry = extern struct {
     texture_view: ?*TextureView,
 };
 pub const BindGroupLayoutDescriptor = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     label: StringView,
     /// TODO
@@ -3538,7 +3539,7 @@ pub const BindGroupLayoutDescriptor = extern struct {
     entries: *const BindGroupLayoutEntry,
 };
 pub const BindGroupLayoutEntry = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     binding: u32,
     /// TODO
@@ -3572,7 +3573,7 @@ pub const BlendState = extern struct {
     alpha: BlendComponent,
 };
 pub const BufferBindingLayout = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// If set to @ref WGPUBufferBindingType_Undefined,
     /// [defaults](@ref SentinelValues) to @ref WGPUBufferBindingType_Uniform.
     type: BufferBindingType,
@@ -3582,7 +3583,7 @@ pub const BufferBindingLayout = extern struct {
     min_binding_size: u64,
 };
 pub const BufferDescriptor = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     label: StringView,
     /// TODO
@@ -3601,7 +3602,7 @@ pub const Color = extern struct {
     a: f64,
 };
 pub const ColorTargetState = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// The texture format of the target. If @ref WGPUTextureFormat_Undefined,
     /// indicates a "hole" in the parent @ref WGPUFragmentState `targets` array:
     /// the pipeline does not output a value at this `location`.
@@ -3612,17 +3613,17 @@ pub const ColorTargetState = extern struct {
     write_mask: ColorWriteMask,
 };
 pub const CommandBufferDescriptor = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     label: StringView,
 };
 pub const CommandEncoderDescriptor = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     label: StringView,
 };
 pub const CompatibilityModeLimits = extern struct {
-    chain: ?*ChainedStruct,
+    chain: ChainedStruct,
     /// TODO
     max_storage_buffers_in_vertex_stage: u32,
     /// TODO
@@ -3633,13 +3634,13 @@ pub const CompatibilityModeLimits = extern struct {
     max_storage_textures_in_fragment_stage: u32,
 };
 pub const CompilationInfo = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     messagesCount: usize,
     messages: *const CompilationMessage,
 };
 pub const CompilationMessage = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// A @ref LocalizableHumanReadableMessageString.
     message: StringView,
     /// Severity level of the message.
@@ -3654,14 +3655,14 @@ pub const CompilationMessage = extern struct {
     length: u64,
 };
 pub const ComputePassDescriptor = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     label: StringView,
     /// TODO
     timestamp_writes: ?*const PassTimestampWrites,
 };
 pub const ComputePipelineDescriptor = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     label: StringView,
     /// TODO
@@ -3670,7 +3671,7 @@ pub const ComputePipelineDescriptor = extern struct {
     compute: ComputeState,
 };
 pub const ComputeState = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     module: *ShaderModule,
     /// TODO
@@ -3680,7 +3681,7 @@ pub const ComputeState = extern struct {
     constants: *const ConstantEntry,
 };
 pub const ConstantEntry = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     key: StringView,
     /// Represents a WGSL numeric or boolean value using @ref DoubleAsSupertype.
@@ -3689,7 +3690,7 @@ pub const ConstantEntry = extern struct {
     value: f64,
 };
 pub const DepthStencilState = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     format: TextureFormat,
     /// TODO
@@ -3716,7 +3717,7 @@ pub const DepthStencilState = extern struct {
     depth_bias_clamp: f32,
 };
 pub const DeviceDescriptor = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     label: StringView,
     /// TODO
@@ -3743,15 +3744,15 @@ pub const Extent3D = extern struct {
     depth_or_array_layers: u32,
 };
 pub const ExternalTextureBindingEntry = extern struct {
-    chain: ?*ChainedStruct,
+    chain: ChainedStruct,
     /// TODO
     external_texture: *ExternalTexture,
 };
 pub const ExternalTextureBindingLayout = extern struct {
-    chain: ?*ChainedStruct,
+    chain: ChainedStruct,
 };
 pub const FragmentState = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     module: *ShaderModule,
     /// TODO
@@ -3774,7 +3775,7 @@ pub const FutureWaitInfo = extern struct {
     completed: Bool,
 };
 pub const InstanceDescriptor = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     required_featuresCount: usize,
     required_features: *const InstanceFeatureName,
@@ -3782,12 +3783,12 @@ pub const InstanceDescriptor = extern struct {
     required_limits: ?*const InstanceLimits,
 };
 pub const InstanceLimits = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// The maximum number @ref WGPUFutureWaitInfo supported in a call to ::wgpuInstanceWaitAny with `timeoutNS > 0`.
     timed_wait_any_max_count: usize,
 };
 pub const Limits = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     max_texture_dimension_1D: u32,
     /// TODO
@@ -3854,7 +3855,7 @@ pub const Limits = extern struct {
     max_immediate_size: u32,
 };
 pub const MultisampleState = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     count: u32,
     /// TODO
@@ -3871,7 +3872,7 @@ pub const Origin3D = extern struct {
     z: u32,
 };
 pub const PassTimestampWrites = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// Query set to write timestamps to.
     query_set: *QuerySet,
     /// TODO
@@ -3880,7 +3881,7 @@ pub const PassTimestampWrites = extern struct {
     end_of_pass_write_index: u32,
 };
 pub const PipelineLayoutDescriptor = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     label: StringView,
     /// TODO
@@ -3890,7 +3891,7 @@ pub const PipelineLayoutDescriptor = extern struct {
     immediate_size: u32,
 };
 pub const PrimitiveState = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// If set to @ref WGPUPrimitiveTopology_Undefined,
     /// [defaults](@ref SentinelValues) to @ref WGPUPrimitiveTopology_TriangleList.
     topology: PrimitiveTopology,
@@ -3906,7 +3907,7 @@ pub const PrimitiveState = extern struct {
     unclipped_depth: Bool,
 };
 pub const QuerySetDescriptor = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     label: StringView,
     /// TODO
@@ -3915,17 +3916,17 @@ pub const QuerySetDescriptor = extern struct {
     count: u32,
 };
 pub const QueueDescriptor = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     label: StringView,
 };
 pub const RenderBundleDescriptor = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     label: StringView,
 };
 pub const RenderBundleEncoderDescriptor = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     label: StringView,
     /// TODO
@@ -3941,7 +3942,7 @@ pub const RenderBundleEncoderDescriptor = extern struct {
     stencil_read_only: Bool,
 };
 pub const RenderPassColorAttachment = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// If `NULL`, indicates a hole in the parent
     /// @ref WGPURenderPassDescriptor::colorAttachments array.
     view: ?*TextureView,
@@ -3957,7 +3958,7 @@ pub const RenderPassColorAttachment = extern struct {
     clear_value: Color,
 };
 pub const RenderPassDepthStencilAttachment = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     view: *TextureView,
     /// TODO
@@ -3983,7 +3984,7 @@ pub const RenderPassDepthStencilAttachment = extern struct {
     stencil_read_only: Bool,
 };
 pub const RenderPassDescriptor = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     label: StringView,
     /// TODO
@@ -3997,12 +3998,12 @@ pub const RenderPassDescriptor = extern struct {
     timestamp_writes: ?*const PassTimestampWrites,
 };
 pub const RenderPassMaxDrawCount = extern struct {
-    chain: ?*ChainedStruct,
+    chain: ChainedStruct,
     /// TODO
     max_draw_count: u64,
 };
 pub const RenderPipelineDescriptor = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     label: StringView,
     /// TODO
@@ -4019,7 +4020,7 @@ pub const RenderPipelineDescriptor = extern struct {
     fragment: ?*const FragmentState,
 };
 pub const RequestAdapterOptions = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// "Feature level" for the adapter request. If an adapter is returned, it must support the features and limits in the requested feature level.
     ///
     /// If set to @ref WGPUFeatureLevel_Undefined,
@@ -4040,18 +4041,18 @@ pub const RequestAdapterOptions = extern struct {
     compatible_surface: ?*Surface,
 };
 pub const RequestAdapterWebXROptions = extern struct {
-    chain: ?*ChainedStruct,
+    chain: ChainedStruct,
     /// Sets the `xrCompatible` option in the JS API.
     xr_compatible: Bool,
 };
 pub const SamplerBindingLayout = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// If set to @ref WGPUSamplerBindingType_Undefined,
     /// [defaults](@ref SentinelValues) to @ref WGPUSamplerBindingType_Filtering.
     type: SamplerBindingType,
 };
 pub const SamplerDescriptor = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     label: StringView,
     /// If set to @ref WGPUAddressMode_Undefined,
@@ -4086,19 +4087,19 @@ pub const SamplerDescriptor = extern struct {
     max_anisotropy: i16,
 };
 pub const ShaderModuleDescriptor = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     label: StringView,
 };
 pub const ShaderSourceSPIRV = extern struct {
-    chain: ?*ChainedStruct,
+    chain: ChainedStruct,
     /// TODO
     code_size: u32,
     /// TODO
     code: *const u32,
 };
 pub const ShaderSourceWGSL = extern struct {
-    chain: ?*ChainedStruct,
+    chain: ChainedStruct,
     /// TODO
     code: StringView,
 };
@@ -4117,7 +4118,7 @@ pub const StencilFaceState = extern struct {
     pass_op: StencilOperation,
 };
 pub const StorageTextureBindingLayout = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// If set to @ref WGPUStorageTextureAccess_Undefined,
     /// [defaults](@ref SentinelValues) to @ref WGPUStorageTextureAccess_WriteOnly.
     access: StorageTextureAccess,
@@ -4155,7 +4156,7 @@ pub const SupportedWGSLLanguageFeatures = extern struct {
     pub const deinit = wgpuSupportedWGSLLanguageFeaturesFreeMembers;
 };
 pub const SurfaceCapabilities = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// The bit set of supported @ref WGPUTextureUsage bits.
     /// Guaranteed to contain @ref WGPUTextureUsage_RenderAttachment.
     usages: TextureUsage,
@@ -4176,14 +4177,14 @@ pub const SurfaceCapabilities = extern struct {
     pub const deinit = wgpuSurfaceCapabilitiesFreeMembers;
 };
 pub const SurfaceColorManagement = extern struct {
-    chain: ?*ChainedStruct,
+    chain: ChainedStruct,
     /// TODO
     color_space: PredefinedColorSpace,
     /// TODO
     tone_mapping_mode: ToneMappingMode,
 };
 pub const SurfaceConfiguration = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// The @ref WGPUDevice to use to render to surface's textures.
     device: *Device,
     /// The @ref WGPUTextureFormat of the surface's textures.
@@ -4210,29 +4211,29 @@ pub const SurfaceConfiguration = extern struct {
     present_mode: PresentMode,
 };
 pub const SurfaceDescriptor = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// Label used to refer to the object.
     label: StringView,
 };
 pub const SurfaceSourceAndroidNativeWindow = extern struct {
-    chain: ?*ChainedStruct,
+    chain: ChainedStruct,
     /// The pointer to the [`ANativeWindow`](https://developer.android.com/ndk/reference/group/a-native-window) that will be wrapped by the @ref WGPUSurface.
     window: *void,
 };
 pub const SurfaceSourceMetalLayer = extern struct {
-    chain: ?*ChainedStruct,
+    chain: ChainedStruct,
     /// The pointer to the [`CAMetalLayer`](https://developer.apple.com/documentation/quartzcore/cametallayer?language=objc) that will be wrapped by the @ref WGPUSurface.
     layer: *void,
 };
 pub const SurfaceSourceWaylandSurface = extern struct {
-    chain: ?*ChainedStruct,
+    chain: ChainedStruct,
     /// A [`wl_display`](https://wayland.freedesktop.org/docs/html/apa.html#protocol-spec-wl_display) for this Wayland instance.
     display: *void,
     /// A [`wl_surface`](https://wayland.freedesktop.org/docs/html/apa.html#protocol-spec-wl_surface) that will be wrapped by the @ref WGPUSurface
     surface: *void,
 };
 pub const SurfaceSourceWindowsHWND = extern struct {
-    chain: ?*ChainedStruct,
+    chain: ChainedStruct,
     /// The [`HINSTANCE`](https://learn.microsoft.com/en-us/windows/win32/learnwin32/winmain--the-application-entry-point) for this application.
     /// Most commonly `GetModuleHandle(nullptr)`.
     hinstance: *void,
@@ -4240,21 +4241,21 @@ pub const SurfaceSourceWindowsHWND = extern struct {
     hwnd: *void,
 };
 pub const SurfaceSourceXCBWindow = extern struct {
-    chain: ?*ChainedStruct,
+    chain: ChainedStruct,
     /// The `xcb_connection_t` for the connection to the X server.
     connection: *void,
     /// The `xcb_window_t` for the window that will be wrapped by the @ref WGPUSurface.
     window: u32,
 };
 pub const SurfaceSourceXlibWindow = extern struct {
-    chain: ?*ChainedStruct,
+    chain: ChainedStruct,
     /// A pointer to the [`Display`](https://www.x.org/releases/current/doc/libX11/libX11/libX11.html#Opening_the_Display) connected to the X server.
     display: *void,
     /// The [`Window`](https://www.x.org/releases/current/doc/libX11/libX11/libX11.html#Creating_Windows) that will be wrapped by the @ref WGPUSurface.
     window: u64,
 };
 pub const SurfaceTexture = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// The @ref WGPUTexture representing the frame that will be shown on the surface.
     /// It is @ref ReturnedWithOwnership from @ref wgpuSurfaceGetCurrentTexture.
     texture: *Texture,
@@ -4287,7 +4288,7 @@ pub const TexelCopyTextureInfo = extern struct {
     aspect: TextureAspect,
 };
 pub const TextureBindingLayout = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// If set to @ref WGPUTextureSampleType_Undefined,
     /// [defaults](@ref SentinelValues) to @ref WGPUTextureSampleType_Float.
     sample_type: TextureSampleType,
@@ -4298,7 +4299,7 @@ pub const TextureBindingLayout = extern struct {
     multisampled: Bool,
 };
 pub const TextureBindingViewDimension = extern struct {
-    chain: ?*ChainedStruct,
+    chain: ChainedStruct,
     /// TODO
     texture_binding_view_dimension: TextureViewDimension,
 };
@@ -4325,12 +4326,12 @@ pub const TextureComponentSwizzle = extern struct {
     a: ComponentSwizzle,
 };
 pub const TextureComponentSwizzleDescriptor = extern struct {
-    chain: ?*ChainedStruct,
+    chain: ChainedStruct,
     /// TODO
     swizzle: TextureComponentSwizzle,
 };
 pub const TextureDescriptor = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     label: StringView,
     /// TODO
@@ -4351,7 +4352,7 @@ pub const TextureDescriptor = extern struct {
     view_formats: *const TextureFormat,
 };
 pub const TextureViewDescriptor = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     label: StringView,
     /// TODO
@@ -4373,7 +4374,7 @@ pub const TextureViewDescriptor = extern struct {
     usage: TextureUsage,
 };
 pub const VertexAttribute = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     format: VertexFormat,
     /// TODO
@@ -4382,7 +4383,7 @@ pub const VertexAttribute = extern struct {
     shader_location: u32,
 };
 pub const VertexBufferLayout = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     step_mode: VertexStepMode,
     /// TODO
@@ -4392,7 +4393,7 @@ pub const VertexBufferLayout = extern struct {
     attributes: *const VertexAttribute,
 };
 pub const VertexState = extern struct {
-    chain: ChainedStruct,
+    chain: ?*ChainedStruct,
     /// TODO
     module: *ShaderModule,
     /// TODO

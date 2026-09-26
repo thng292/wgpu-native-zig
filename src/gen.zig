@@ -463,9 +463,9 @@ fn renderStruct(ctx: *Context, structt: Struct, writer: *std.Io.Writer) !void {
     _ = try writer.write(" = extern struct {\n");
     if (std.mem.eql(u8, structt.type, "extensible") //
     or std.mem.eql(u8, structt.type, "extensible_callback_arg")) {
-        _ = try writer.write("chain: ChainedStruct,\n");
-    } else if (std.mem.eql(u8, structt.type, "extension")) {
         _ = try writer.write("chain: ?*ChainedStruct,\n");
+    } else if (std.mem.eql(u8, structt.type, "extension")) {
+        _ = try writer.write("chain: ChainedStruct,\n");
     } else if (std.mem.eql(u8, structt.type, "standalone")) {} else {
         //
     }
