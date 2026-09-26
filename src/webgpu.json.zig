@@ -3495,7 +3495,7 @@ pub const AdapterInfo = extern struct {
     /// TODO
     subgroup_max_size: u32,
     extern "C" fn wgpuAdapterInfoFreeMembers(
-        self: *AdapterInfo,
+        self: AdapterInfo,
     ) void;
     pub const deinit = wgpuAdapterInfoFreeMembers;
 };
@@ -4133,7 +4133,7 @@ pub const SupportedFeatures = extern struct {
     featuresCount: usize,
     features: *const FeatureName,
     extern "C" fn wgpuSupportedFeaturesFreeMembers(
-        self: *SupportedFeatures,
+        self: SupportedFeatures,
     ) void;
     pub const deinit = wgpuSupportedFeaturesFreeMembers;
 };
@@ -4142,7 +4142,7 @@ pub const SupportedInstanceFeatures = extern struct {
     featuresCount: usize,
     features: *const InstanceFeatureName,
     extern "C" fn wgpuSupportedInstanceFeaturesFreeMembers(
-        self: *SupportedInstanceFeatures,
+        self: SupportedInstanceFeatures,
     ) void;
     pub const deinit = wgpuSupportedInstanceFeaturesFreeMembers;
 };
@@ -4151,7 +4151,7 @@ pub const SupportedWGSLLanguageFeatures = extern struct {
     featuresCount: usize,
     features: *const WGSLLanguageFeatureName,
     extern "C" fn wgpuSupportedWGSLLanguageFeaturesFreeMembers(
-        self: *SupportedWGSLLanguageFeatures,
+        self: SupportedWGSLLanguageFeatures,
     ) void;
     pub const deinit = wgpuSupportedWGSLLanguageFeaturesFreeMembers;
 };
@@ -4172,7 +4172,7 @@ pub const SurfaceCapabilities = extern struct {
     alpha_modesCount: usize,
     alpha_modes: *const CompositeAlphaMode,
     extern "C" fn wgpuSurfaceCapabilitiesFreeMembers(
-        self: *SurfaceCapabilities,
+        self: SurfaceCapabilities,
     ) void;
     pub const deinit = wgpuSurfaceCapabilitiesFreeMembers;
 };

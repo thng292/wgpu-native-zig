@@ -35,6 +35,7 @@ pub const StringView = extern struct {
 
     /// Helper to convert the StringView into a Zig slice if data is not null.
     pub fn toSlice(self: StringView) ?[]const u8 {
+        if (self.length == 0) return null;
         const ptr = self.data orelse return null;
         return ptr[0..self.length];
     }
