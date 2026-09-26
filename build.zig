@@ -5,7 +5,9 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
     const linkage = b.option(std.builtin.LinkMode, "linkage", "wgpu-native link mode") orelse .static;
+    const examples = b.option([]const u8, "examples", "Build examples, pass as comma separated list");
 
+    // Root Modulue
     const mod = b.addModule("wgpu-native-zig", .{
         .root_source_file = b.path("src/webgpu.json.zig"),
         .target = target,
@@ -21,6 +23,7 @@ pub fn build(b: *std.Build) void {
         .use_pkg_config = .no,
     });
 
+    // Tests
     const mod_tests = b.addTest(.{
         .root_module = mod,
     });
@@ -30,6 +33,7 @@ pub fn build(b: *std.Build) void {
     const test_step = b.step("test", "Run tests");
     test_step.dependOn(&run_mod_tests.step);
 
+    // Generation
     const gen_step = b.step("gen", "Generate binding from webgpu.json.");
     const gen_exe = b.addExecutable(.{
         .name = "translate",
@@ -48,6 +52,43 @@ pub fn build(b: *std.Build) void {
         gen_run_step.addArgs(run_args);
     }
     gen_step.dependOn(&gen_run_step.step);
+
+    // Examples
+    const example_step = b.step("example", "Build examples");
+    var to_be_built: std.ArrayList([]const u8) = .empty;
+    defer to_be_built.deinit(b.allocator);
+
+    if (examples) |exs| {
+        var iter = std.mem.splitAny(u8, exs, ",");
+        while (iter.next()) |example| {
+            to_be_built.append(b.allocator, example) catch unreachable;
+        }
+    } else {
+        const cwd = std.Io.Dir.cwd();
+        const example_dir = cwd.openDir(b.graph.io, "examples", .{
+            .iterate = true,
+            .access_sub_paths = true,
+        }) catch unreachable;
+        var iter = example_dir.iterate();
+        while (iter.next(b.graph.io) catch unreachable) |example| {
+            to_be_built.append(b.allocator, example.name) catch unreachable;
+        }
+    }
+    for (to_be_built.items) |example| {
+        const example_mod = b.addModule(example, .{
+            .target = target,
+            .optimize = optimize,
+            .root_source_file = b.path(std.mem.concat(b.allocator, u8, &.{
+                "examples/",
+                example,
+                ".zig",
+            }) catch unreachable),
+        });
+        example_mod.addImport("wgpu", mod);
+        const example_exe = b.addExecutable(.{ .name = example, .root_module = example_mod });
+        const install_step = b.addInstallArtifact(example_exe, .{});
+        example_step.dependOn(&install_step.step);
+    }
 }
 
 fn getWGPUDeps(b: *std.Build, target: std.Target, optimze: std.builtin.OptimizeMode) *std.Build.Dependency {
