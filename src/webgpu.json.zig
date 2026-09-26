@@ -17,7 +17,7 @@
 // --------------------TEMPLATE_START--------------------
 
 const std = @import("std");
-const helpers = @import("helpers.zig");
+pub const helpers = @import("helpers.zig");
 
 test {
     const tests = @import("test.zig");
@@ -114,103 +114,103 @@ pub const WHOLE_SIZE = UINT64_MAX;
 /// TODO
 pub const AdapterType = enum(u32) {
     /// TODO
-    discrete_GPU,
+    discrete_GPU = 0x00000001,
     /// TODO
-    integrated_GPU,
+    integrated_GPU = 0x00000002,
     /// TODO
-    CPU,
+    CPU = 0x00000003,
     /// TODO
-    unknown,
+    unknown = 0x00000004,
 };
 
 /// TODO
 pub const AddressMode = enum(u32) {
     /// Indicates no value is passed for this argument. See @ref SentinelValues.
-    undefined,
+    undefined = 0x00000000,
     /// TODO
-    clamp_to_edge,
+    clamp_to_edge = 0x00000001,
     /// TODO
-    repeat,
+    repeat = 0x00000002,
     /// TODO
-    mirror_repeat,
+    mirror_repeat = 0x00000003,
 };
 
 /// TODO
 pub const BackendType = enum(u32) {
     /// Indicates no value is passed for this argument. See @ref SentinelValues.
-    undefined,
+    undefined = 0x00000000,
     /// TODO
-    null,
+    null = 0x00000001,
     /// TODO
-    WebGPU,
+    WebGPU = 0x00000002,
     /// TODO
-    D3D11,
+    D3D11 = 0x00000003,
     /// TODO
-    D3D12,
+    D3D12 = 0x00000004,
     /// TODO
-    metal,
+    metal = 0x00000005,
     /// TODO
-    vulkan,
+    vulkan = 0x00000006,
     /// TODO
-    openGL,
+    openGL = 0x00000007,
     /// TODO
-    openGLES,
+    openGLES = 0x00000008,
 };
 
 /// TODO
 pub const BlendFactor = enum(u32) {
     /// Indicates no value is passed for this argument. See @ref SentinelValues.
-    undefined,
+    undefined = 0x00000000,
     /// TODO
-    zero,
+    zero = 0x00000001,
     /// TODO
-    one,
+    one = 0x00000002,
     /// TODO
-    src,
+    src = 0x00000003,
     /// TODO
-    one_minus_src,
+    one_minus_src = 0x00000004,
     /// TODO
-    src_alpha,
+    src_alpha = 0x00000005,
     /// TODO
-    one_minus_src_alpha,
+    one_minus_src_alpha = 0x00000006,
     /// TODO
-    dst,
+    dst = 0x00000007,
     /// TODO
-    one_minus_dst,
+    one_minus_dst = 0x00000008,
     /// TODO
-    dst_alpha,
+    dst_alpha = 0x00000009,
     /// TODO
-    one_minus_dst_alpha,
+    one_minus_dst_alpha = 0x0000000A,
     /// TODO
-    src_alpha_saturated,
+    src_alpha_saturated = 0x0000000B,
     /// TODO
-    constant,
+    constant = 0x0000000C,
     /// TODO
-    one_minus_constant,
+    one_minus_constant = 0x0000000D,
     /// TODO
-    src1,
+    src1 = 0x0000000E,
     /// TODO
-    one_minus_src1,
+    one_minus_src1 = 0x0000000F,
     /// TODO
-    src1_alpha,
+    src1_alpha = 0x00000010,
     /// TODO
-    one_minus_src1_alpha,
+    one_minus_src1_alpha = 0x00000011,
 };
 
 /// TODO
 pub const BlendOperation = enum(u32) {
     /// Indicates no value is passed for this argument. See @ref SentinelValues.
-    undefined,
+    undefined = 0x00000000,
     /// TODO
-    add,
+    add = 0x00000001,
     /// TODO
-    subtract,
+    subtract = 0x00000002,
     /// TODO
-    reverse_subtract,
+    reverse_subtract = 0x00000003,
     /// TODO
-    min,
+    min = 0x00000004,
     /// TODO
-    max,
+    max = 0x00000005,
 };
 
 /// TODO
@@ -218,25 +218,25 @@ pub const BufferBindingType = enum(u32) {
     /// Indicates that this @ref WGPUBufferBindingLayout member of
     /// its parent @ref WGPUBindGroupLayoutEntry is not used.
     /// (See also @ref SentinelValues.)
-    binding_not_used,
+    binding_not_used = 0x00000000,
     /// `1`. Indicates no value is passed for this argument. See @ref SentinelValues.
-    undefined,
+    undefined = 0x00000001,
     /// TODO
-    uniform,
+    uniform = 0x00000002,
     /// TODO
-    storage,
+    storage = 0x00000003,
     /// TODO
-    read_only_storage,
+    read_only_storage = 0x00000004,
 };
 
 /// TODO
 pub const BufferMapState = enum(u32) {
     /// TODO
-    unmapped,
+    unmapped = 0x00000001,
     /// TODO
-    pending,
+    pending = 0x00000002,
     /// TODO
-    mapped,
+    mapped = 0x00000003,
 };
 
 /// The callback mode controls how a callback for an asynchronous operation may be fired. See @ref Asynchronous-Operations for how these are used.
@@ -244,11 +244,11 @@ pub const CallbackMode = enum(u32) {
     /// Callbacks created with `WGPUCallbackMode_WaitAnyOnly`:
     /// - fire when the asynchronous operation's future is passed to a call to @ref wgpuInstanceWaitAny
     ///   AND the operation has already completed or it completes inside the call to @ref wgpuInstanceWaitAny.
-    wait_any_only,
+    wait_any_only = 0x00000001,
     /// Callbacks created with `WGPUCallbackMode_AllowProcessEvents`:
     /// - fire for the same reasons as callbacks created with `WGPUCallbackMode_WaitAnyOnly`
     /// - fire inside a call to @ref wgpuInstanceProcessEvents if the asynchronous operation is complete.
-    allow_process_events,
+    allow_process_events = 0x00000002,
     /// Callbacks created with `WGPUCallbackMode_AllowSpontaneous`:
     /// - fire for the same reasons as callbacks created with `WGPUCallbackMode_AllowProcessEvents`
     /// - **may** fire spontaneously on an arbitrary or application thread, when the WebGPU implementations discovers that the asynchronous operation is complete.
@@ -256,428 +256,428 @@ pub const CallbackMode = enum(u32) {
     ///   Implementations _should_ fire spontaneous callbacks as soon as possible.
     ///
     /// @note Because spontaneous callbacks may fire at an arbitrary time on an arbitrary thread, applications should take extra care when acquiring locks or mutating state inside the callback. It undefined behavior to re-entrantly call into the webgpu.h API if the callback fires while inside the callstack of another webgpu.h function that is not `wgpuInstanceWaitAny` or `wgpuInstanceProcessEvents`.
-    allow_spontaneous,
+    allow_spontaneous = 0x00000003,
 };
 
 /// TODO
 pub const CompareFunction = enum(u32) {
     /// Indicates no value is passed for this argument. See @ref SentinelValues.
-    undefined,
+    undefined = 0x00000000,
     /// TODO
-    never,
+    never = 0x00000001,
     /// TODO
-    less,
+    less = 0x00000002,
     /// TODO
-    equal,
+    equal = 0x00000003,
     /// TODO
-    less_equal,
+    less_equal = 0x00000004,
     /// TODO
-    greater,
+    greater = 0x00000005,
     /// TODO
-    not_equal,
+    not_equal = 0x00000006,
     /// TODO
-    greater_equal,
+    greater_equal = 0x00000007,
     /// TODO
-    always,
+    always = 0x00000008,
 };
 
 /// TODO
 pub const CompilationInfoRequestStatus = enum(u32) {
     /// TODO
-    success,
+    success = 0x00000001,
     /// See @ref CallbackStatuses.
-    callback_cancelled,
+    callback_cancelled = 0x00000002,
 };
 
 /// TODO
 pub const CompilationMessageType = enum(u32) {
     /// TODO
-    @"error",
+    @"error" = 0x00000001,
     /// TODO
-    warning,
+    warning = 0x00000002,
     /// TODO
-    info,
+    info = 0x00000003,
 };
 
 /// TODO
 pub const ComponentSwizzle = enum(u32) {
     /// Indicates no value is passed for this argument. See @ref SentinelValues.
-    undefined,
+    undefined = 0x00000000,
     /// Force its value to 0.
-    zero,
+    zero = 0x00000001,
     /// Force its value to 1.
-    one,
+    one = 0x00000002,
     /// Take its value from the red channel of the texture.
-    r,
+    r = 0x00000003,
     /// Take its value from the green channel of the texture.
-    g,
+    g = 0x00000004,
     /// Take its value from the blue channel of the texture.
-    b,
+    b = 0x00000005,
     /// Take its value from the alpha channel of the texture.
-    a,
+    a = 0x00000006,
 };
 
 /// Describes how frames are composited with other contents on the screen when @ref wgpuSurfacePresent is called.
 pub const CompositeAlphaMode = enum(u32) {
     /// Lets the WebGPU implementation choose the best mode (supported, and with the best performance) between @ref WGPUCompositeAlphaMode_Opaque or @ref WGPUCompositeAlphaMode_Inherit.
-    auto,
+    auto = 0x00000000,
     /// The alpha component of the image is ignored and teated as if it is always 1.0.
-    @"opaque",
+    @"opaque" = 0x00000001,
     /// The alpha component is respected and non-alpha components are assumed to be already multiplied with the alpha component. For example, (0.5, 0, 0, 0.5) is semi-transparent bright red.
-    premultiplied,
+    premultiplied = 0x00000002,
     /// The alpha component is respected and non-alpha components are assumed to NOT be already multiplied with the alpha component. For example, (1.0, 0, 0, 0.5) is semi-transparent bright red.
-    unpremultiplied,
+    unpremultiplied = 0x00000003,
     /// The handling of the alpha component is unknown to WebGPU and should be handled by the application using system-specific APIs. This mode may be unavailable (for example on Wasm).
-    inherit,
+    inherit = 0x00000004,
 };
 
 /// TODO
 pub const CreatePipelineAsyncStatus = enum(u32) {
     /// TODO
-    success,
+    success = 0x00000001,
     /// See @ref CallbackStatuses.
-    callback_cancelled,
+    callback_cancelled = 0x00000002,
     /// TODO
-    validation_error,
+    validation_error = 0x00000003,
     /// TODO
-    internal_error,
+    internal_error = 0x00000004,
 };
 
 /// TODO
 pub const CullMode = enum(u32) {
     /// Indicates no value is passed for this argument. See @ref SentinelValues.
-    undefined,
+    undefined = 0x00000000,
     /// TODO
-    none,
+    none = 0x00000001,
     /// TODO
-    front,
+    front = 0x00000002,
     /// TODO
-    back,
+    back = 0x00000003,
 };
 
 /// TODO
 pub const DeviceLostReason = enum(u32) {
     /// TODO
-    unknown,
+    unknown = 0x00000001,
     /// TODO
-    destroyed,
+    destroyed = 0x00000002,
     /// See @ref CallbackStatuses.
-    callback_cancelled,
+    callback_cancelled = 0x00000003,
     /// TODO
-    failed_creation,
+    failed_creation = 0x00000004,
 };
 
 /// TODO
 pub const ErrorFilter = enum(u32) {
     /// TODO
-    validation,
+    validation = 0x00000001,
     /// TODO
-    out_of_memory,
+    out_of_memory = 0x00000002,
     /// TODO
-    internal,
+    internal = 0x00000003,
 };
 
 /// TODO
 pub const ErrorType = enum(u32) {
     /// TODO
-    no_error,
+    no_error = 0x00000001,
     /// TODO
-    validation,
+    validation = 0x00000002,
     /// TODO
-    out_of_memory,
+    out_of_memory = 0x00000003,
     /// TODO
-    internal,
+    internal = 0x00000004,
     /// TODO
-    unknown,
+    unknown = 0x00000005,
 };
 
 /// See @ref WGPURequestAdapterOptions::featureLevel.
 pub const FeatureLevel = enum(u32) {
     /// Indicates no value is passed for this argument. See @ref SentinelValues.
-    undefined,
+    undefined = 0x00000000,
     /// "Compatibility" profile which can be supported on OpenGL ES 3.1 and D3D11.
-    compatibility,
+    compatibility = 0x00000001,
     /// "Core" profile which can be supported on Vulkan/Metal/D3D12 (at least).
-    core,
+    core = 0x00000002,
 };
 
 /// TODO
 pub const FeatureName = enum(u32) {
     /// TODO
-    core_features_and_limits,
+    core_features_and_limits = 0x00000001,
     /// TODO
-    depth_clip_control,
+    depth_clip_control = 0x00000002,
     /// TODO
-    depth32_float_stencil8,
+    depth32_float_stencil8 = 0x00000003,
     /// TODO
-    texture_compression_BC,
+    texture_compression_BC = 0x00000004,
     /// TODO
-    texture_compression_BC_sliced_3D,
+    texture_compression_BC_sliced_3D = 0x00000005,
     /// TODO
-    texture_compression_ETC2,
+    texture_compression_ETC2 = 0x00000006,
     /// TODO
-    texture_compression_ASTC,
+    texture_compression_ASTC = 0x00000007,
     /// TODO
-    texture_compression_ASTC_sliced_3D,
+    texture_compression_ASTC_sliced_3D = 0x00000008,
     /// TODO
-    timestamp_query,
+    timestamp_query = 0x00000009,
     /// TODO
-    indirect_first_instance,
+    indirect_first_instance = 0x0000000A,
     /// TODO
-    shader_f16,
+    shader_f16 = 0x0000000B,
     /// TODO
-    RG11B10_ufloat_renderable,
+    RG11B10_ufloat_renderable = 0x0000000C,
     /// TODO
-    BGRA8_unorm_storage,
+    BGRA8_unorm_storage = 0x0000000D,
     /// TODO
-    float32_filterable,
+    float32_filterable = 0x0000000E,
     /// TODO
-    float32_blendable,
+    float32_blendable = 0x0000000F,
     /// TODO
-    clip_distances,
+    clip_distances = 0x00000010,
     /// TODO
-    dual_source_blending,
+    dual_source_blending = 0x00000011,
     /// TODO
-    subgroups,
+    subgroups = 0x00000012,
     /// TODO
-    texture_formats_tier_1,
+    texture_formats_tier_1 = 0x00000013,
     /// TODO
-    texture_formats_tier_2,
+    texture_formats_tier_2 = 0x00000014,
     /// TODO
-    primitive_index,
+    primitive_index = 0x00000015,
     /// TODO
-    texture_component_swizzle,
+    texture_component_swizzle = 0x00000016,
     /// TODO
-    subgroup_size_control,
+    subgroup_size_control = 0x00000017,
     /// TODO
-    texture_compression_unaligned,
+    texture_compression_unaligned = 0x00000018,
 };
 
 /// TODO
 pub const FilterMode = enum(u32) {
     /// Indicates no value is passed for this argument. See @ref SentinelValues.
-    undefined,
+    undefined = 0x00000000,
     /// TODO
-    nearest,
+    nearest = 0x00000001,
     /// TODO
-    linear,
+    linear = 0x00000002,
 };
 
 /// TODO
 pub const FrontFace = enum(u32) {
     /// Indicates no value is passed for this argument. See @ref SentinelValues.
-    undefined,
+    undefined = 0x00000000,
     /// TODO
-    CCW,
+    CCW = 0x00000001,
     /// TODO
-    CW,
+    CW = 0x00000002,
 };
 
 /// TODO
 pub const IndexFormat = enum(u32) {
     /// Indicates no value is passed for this argument. See @ref SentinelValues.
-    undefined,
+    undefined = 0x00000000,
     /// TODO
-    uint16,
+    uint16 = 0x00000001,
     /// TODO
-    uint32,
+    uint32 = 0x00000002,
 };
 
 /// TODO
 pub const InstanceFeatureName = enum(u32) {
     /// Enable use of ::wgpuInstanceWaitAny with `timeoutNS > 0`.
-    timed_wait_any,
+    timed_wait_any = 0x00000001,
     /// Enable passing SPIR-V shaders to @ref wgpuDeviceCreateShaderModule,
     /// via @ref WGPUShaderSourceSPIRV.
-    shader_source_SPIRV,
+    shader_source_SPIRV = 0x00000002,
     /// Normally, a @ref WGPUAdapter can only create a single device. If this is
     /// available and enabled, then adapters won't immediately expire when they
     /// create a device, so can be reused to make multiple devices. They may
     /// still expire for other reasons.
-    multiple_devices_per_adapter,
+    multiple_devices_per_adapter = 0x00000003,
 };
 
 /// TODO
 pub const LoadOp = enum(u32) {
     /// Indicates no value is passed for this argument. See @ref SentinelValues.
-    undefined,
+    undefined = 0x00000000,
     /// TODO
-    load,
+    load = 0x00000001,
     /// TODO
-    clear,
+    clear = 0x00000002,
 };
 
 /// TODO
 pub const MapAsyncStatus = enum(u32) {
     /// TODO
-    success,
+    success = 0x00000001,
     /// See @ref CallbackStatuses.
-    callback_cancelled,
+    callback_cancelled = 0x00000002,
     /// TODO
-    @"error",
+    @"error" = 0x00000003,
     /// TODO
-    aborted,
+    aborted = 0x00000004,
 };
 
 /// TODO
 pub const MipmapFilterMode = enum(u32) {
     /// Indicates no value is passed for this argument. See @ref SentinelValues.
-    undefined,
+    undefined = 0x00000000,
     /// TODO
-    nearest,
+    nearest = 0x00000001,
     /// TODO
-    linear,
+    linear = 0x00000002,
 };
 
 /// TODO
 pub const OptionalBool = enum(u32) {
     /// TODO
-    false,
+    false = 0x00000000,
     /// TODO
-    true,
+    true = 0x00000001,
     /// TODO
-    undefined,
+    undefined = 0x00000002,
 };
 
 /// TODO
 pub const PopErrorScopeStatus = enum(u32) {
     /// The error scope stack was successfully popped and a result was reported.
-    success,
+    success = 0x00000001,
     /// See @ref CallbackStatuses.
-    callback_cancelled,
+    callback_cancelled = 0x00000002,
     /// The error scope stack could not be popped, because it was empty.
-    @"error",
+    @"error" = 0x00000003,
 };
 
 /// TODO
 pub const PowerPreference = enum(u32) {
     /// No preference. (See also @ref SentinelValues.)
-    undefined,
+    undefined = 0x00000000,
     /// TODO
-    low_power,
+    low_power = 0x00000001,
     /// TODO
-    high_performance,
+    high_performance = 0x00000002,
 };
 
 /// TODO
 pub const PredefinedColorSpace = enum(u32) {
     /// TODO
-    SRGB,
+    SRGB = 0x00000001,
     /// TODO
-    display_p3,
+    display_p3 = 0x00000002,
 };
 
 /// Describes when and in which order frames are presented on the screen when @ref wgpuSurfacePresent is called.
 pub const PresentMode = enum(u32) {
     /// Present mode is not specified. Use the default.
-    undefined,
+    undefined = 0x00000000,
     /// The presentation of the image to the user waits for the next vertical blanking period to update in a first-in, first-out manner.
     /// Tearing cannot be observed and frame-loop will be limited to the display's refresh rate.
     /// This is the only mode that's always available.
-    fifo,
+    fifo = 0x00000001,
     /// The presentation of the image to the user tries to wait for the next vertical blanking period but may decide to not wait if a frame is presented late.
     /// Tearing can sometimes be observed but late-frame don't produce a full-frame stutter in the presentation.
     /// This is still a first-in, first-out mechanism so a frame-loop will be limited to the display's refresh rate.
-    fifo_relaxed,
+    fifo_relaxed = 0x00000002,
     /// The presentation of the image to the user is updated immediately without waiting for a vertical blank.
     /// Tearing can be observed but latency is minimized.
-    immediate,
+    immediate = 0x00000003,
     /// The presentation of the image to the user waits for the next vertical blanking period to update to the latest provided image.
     /// Tearing cannot be observed and a frame-loop is not limited to the display's refresh rate.
-    mailbox,
+    mailbox = 0x00000004,
 };
 
 /// TODO
 pub const PrimitiveTopology = enum(u32) {
     /// Indicates no value is passed for this argument. See @ref SentinelValues.
-    undefined,
+    undefined = 0x00000000,
     /// TODO
-    point_list,
+    point_list = 0x00000001,
     /// TODO
-    line_list,
+    line_list = 0x00000002,
     /// TODO
-    line_strip,
+    line_strip = 0x00000003,
     /// TODO
-    triangle_list,
+    triangle_list = 0x00000004,
     /// TODO
-    triangle_strip,
+    triangle_strip = 0x00000005,
 };
 
 /// TODO
 pub const QueryType = enum(u32) {
     /// TODO
-    occlusion,
+    occlusion = 0x00000001,
     /// TODO
-    timestamp,
+    timestamp = 0x00000002,
 };
 
 /// TODO
 pub const QueueWorkDoneStatus = enum(u32) {
     /// TODO
-    success,
+    success = 0x00000001,
     /// See @ref CallbackStatuses.
-    callback_cancelled,
+    callback_cancelled = 0x00000002,
     /// There was some deterministic error. (Note this is currently never used,
     /// but it will be relevant when it's possible to create a queue object.)
-    @"error",
+    @"error" = 0x00000003,
 };
 
 /// TODO
 pub const RequestAdapterStatus = enum(u32) {
     /// TODO
-    success,
+    success = 0x00000001,
     /// See @ref CallbackStatuses.
-    callback_cancelled,
+    callback_cancelled = 0x00000002,
     /// TODO
-    unavailable,
+    unavailable = 0x00000003,
     /// TODO
-    @"error",
+    @"error" = 0x00000004,
 };
 
 /// TODO
 pub const RequestDeviceStatus = enum(u32) {
     /// TODO
-    success,
+    success = 0x00000001,
     /// See @ref CallbackStatuses.
-    callback_cancelled,
+    callback_cancelled = 0x00000002,
     /// TODO
-    @"error",
+    @"error" = 0x00000003,
 };
 
 /// TODO
 pub const SType = enum(u32) {
     /// TODO
-    shader_source_SPIRV,
+    shader_source_SPIRV = 0x00000001,
     /// TODO
-    shader_source_WGSL,
+    shader_source_WGSL = 0x00000002,
     /// TODO
-    render_pass_max_draw_count,
+    render_pass_max_draw_count = 0x00000003,
     /// TODO
-    surface_source_metal_layer,
+    surface_source_metal_layer = 0x00000004,
     /// TODO
-    surface_source_windows_HWND,
+    surface_source_windows_HWND = 0x00000005,
     /// TODO
-    surface_source_xlib_window,
+    surface_source_xlib_window = 0x00000006,
     /// TODO
-    surface_source_wayland_surface,
+    surface_source_wayland_surface = 0x00000007,
     /// TODO
-    surface_source_android_native_window,
+    surface_source_android_native_window = 0x00000008,
     /// TODO
-    surface_source_XCB_window,
+    surface_source_XCB_window = 0x00000009,
     /// TODO
-    surface_color_management,
+    surface_color_management = 0x0000000A,
     /// TODO
-    request_adapter_WebXR_options,
+    request_adapter_WebXR_options = 0x0000000B,
     /// TODO
-    texture_component_swizzle_descriptor,
+    texture_component_swizzle_descriptor = 0x0000000C,
     /// TODO
-    external_texture_binding_layout,
+    external_texture_binding_layout = 0x0000000D,
     /// TODO
-    external_texture_binding_entry,
+    external_texture_binding_entry = 0x0000000E,
     /// TODO
-    compatibility_mode_limits,
+    compatibility_mode_limits = 0x0000000F,
     /// TODO
-    texture_binding_view_dimension,
+    texture_binding_view_dimension = 0x00000010,
 };
 
 /// TODO
@@ -685,45 +685,45 @@ pub const SamplerBindingType = enum(u32) {
     /// Indicates that this @ref WGPUSamplerBindingLayout member of
     /// its parent @ref WGPUBindGroupLayoutEntry is not used.
     /// (See also @ref SentinelValues.)
-    binding_not_used,
+    binding_not_used = 0x00000000,
     /// `1`. Indicates no value is passed for this argument. See @ref SentinelValues.
-    undefined,
+    undefined = 0x00000001,
     /// TODO
-    filtering,
+    filtering = 0x00000002,
     /// TODO
-    non_filtering,
+    non_filtering = 0x00000003,
     /// TODO
-    comparison,
+    comparison = 0x00000004,
 };
 
 /// Status code returned (synchronously) from many operations. Generally
 /// indicates an invalid input like an unknown enum value or @ref OutStructChainError.
 /// Read the function's documentation for specific error conditions.
 pub const Status = enum(u32) {
-    success,
-    @"error",
+    success = 0x00000001,
+    @"error" = 0x00000002,
 };
 
 /// TODO
 pub const StencilOperation = enum(u32) {
     /// Indicates no value is passed for this argument. See @ref SentinelValues.
-    undefined,
+    undefined = 0x00000000,
     /// TODO
-    keep,
+    keep = 0x00000001,
     /// TODO
-    zero,
+    zero = 0x00000002,
     /// TODO
-    replace,
+    replace = 0x00000003,
     /// TODO
-    invert,
+    invert = 0x00000004,
     /// TODO
-    increment_clamp,
+    increment_clamp = 0x00000005,
     /// TODO
-    decrement_clamp,
+    decrement_clamp = 0x00000006,
     /// TODO
-    increment_wrap,
+    increment_wrap = 0x00000007,
     /// TODO
-    decrement_wrap,
+    decrement_wrap = 0x00000008,
 };
 
 /// TODO
@@ -731,273 +731,273 @@ pub const StorageTextureAccess = enum(u32) {
     /// Indicates that this @ref WGPUStorageTextureBindingLayout member of
     /// its parent @ref WGPUBindGroupLayoutEntry is not used.
     /// (See also @ref SentinelValues.)
-    binding_not_used,
+    binding_not_used = 0x00000000,
     /// `1`. Indicates no value is passed for this argument. See @ref SentinelValues.
-    undefined,
+    undefined = 0x00000001,
     /// TODO
-    write_only,
+    write_only = 0x00000002,
     /// TODO
-    read_only,
+    read_only = 0x00000003,
     /// TODO
-    read_write,
+    read_write = 0x00000004,
 };
 
 /// TODO
 pub const StoreOp = enum(u32) {
     /// Indicates no value is passed for this argument. See @ref SentinelValues.
-    undefined,
+    undefined = 0x00000000,
     /// TODO
-    store,
+    store = 0x00000001,
     /// TODO
-    discard,
+    discard = 0x00000002,
 };
 
 /// The status enum for @ref wgpuSurfaceGetCurrentTexture.
 pub const SurfaceGetCurrentTextureStatus = enum(u32) {
     /// Yay! Everything is good and we can render this frame.
-    success_optimal,
+    success_optimal = 0x00000001,
     /// Still OK - the surface can present the frame, but in a suboptimal way. The surface may need reconfiguration.
-    success_suboptimal,
+    success_suboptimal = 0x00000002,
     /// Some operation timed out while trying to acquire the frame.
-    timeout,
+    timeout = 0x00000003,
     /// The surface is too different to be used, compared to when it was originally created.
-    outdated,
+    outdated = 0x00000004,
     /// The connection to whatever owns the surface was lost, or generally needs to be fully reinitialized.
-    lost,
+    lost = 0x00000005,
     /// There was some deterministic error (for example, the surface is not configured, or there was an @ref OutStructChainError). Should produce @ref ImplementationDefinedLogging containing details.
-    @"error",
+    @"error" = 0x00000006,
 };
 
 /// TODO
 pub const TextureAspect = enum(u32) {
     /// Indicates no value is passed for this argument. See @ref SentinelValues.
-    undefined,
+    undefined = 0x00000000,
     /// TODO
-    all,
+    all = 0x00000001,
     /// TODO
-    stencil_only,
+    stencil_only = 0x00000002,
     /// TODO
-    depth_only,
+    depth_only = 0x00000003,
 };
 
 /// TODO
 pub const TextureDimension = enum(u32) {
     /// Indicates no value is passed for this argument. See @ref SentinelValues.
-    undefined,
+    undefined = 0x00000000,
     /// TODO
-    @"1D",
+    @"1D" = 0x00000001,
     /// TODO
-    @"2D",
+    @"2D" = 0x00000002,
     /// TODO
-    @"3D",
+    @"3D" = 0x00000003,
 };
 
 /// TODO
 pub const TextureFormat = enum(u32) {
     /// Indicates no value is passed for this argument. See @ref SentinelValues.
-    undefined,
+    undefined = 0x00000000,
     /// TODO
-    R8_unorm,
+    R8_unorm = 0x00000001,
     /// TODO
-    R8_snorm,
+    R8_snorm = 0x00000002,
     /// TODO
-    R8_uint,
+    R8_uint = 0x00000003,
     /// TODO
-    R8_sint,
+    R8_sint = 0x00000004,
     /// TODO
-    R16_unorm,
+    R16_unorm = 0x00000005,
     /// TODO
-    R16_snorm,
+    R16_snorm = 0x00000006,
     /// TODO
-    R16_uint,
+    R16_uint = 0x00000007,
     /// TODO
-    R16_sint,
+    R16_sint = 0x00000008,
     /// TODO
-    R16_float,
+    R16_float = 0x00000009,
     /// TODO
-    RG8_unorm,
+    RG8_unorm = 0x0000000A,
     /// TODO
-    RG8_snorm,
+    RG8_snorm = 0x0000000B,
     /// TODO
-    RG8_uint,
+    RG8_uint = 0x0000000C,
     /// TODO
-    RG8_sint,
+    RG8_sint = 0x0000000D,
     /// TODO
-    R32_float,
+    R32_float = 0x0000000E,
     /// TODO
-    R32_uint,
+    R32_uint = 0x0000000F,
     /// TODO
-    R32_sint,
+    R32_sint = 0x00000010,
     /// TODO
-    RG16_unorm,
+    RG16_unorm = 0x00000011,
     /// TODO
-    RG16_snorm,
+    RG16_snorm = 0x00000012,
     /// TODO
-    RG16_uint,
+    RG16_uint = 0x00000013,
     /// TODO
-    RG16_sint,
+    RG16_sint = 0x00000014,
     /// TODO
-    RG16_float,
+    RG16_float = 0x00000015,
     /// TODO
-    RGBA8_unorm,
+    RGBA8_unorm = 0x00000016,
     /// TODO
-    RGBA8_unorm_srgb,
+    RGBA8_unorm_srgb = 0x00000017,
     /// TODO
-    RGBA8_snorm,
+    RGBA8_snorm = 0x00000018,
     /// TODO
-    RGBA8_uint,
+    RGBA8_uint = 0x00000019,
     /// TODO
-    RGBA8_sint,
+    RGBA8_sint = 0x0000001A,
     /// TODO
-    BGRA8_unorm,
+    BGRA8_unorm = 0x0000001B,
     /// TODO
-    BGRA8_unorm_srgb,
+    BGRA8_unorm_srgb = 0x0000001C,
     /// TODO
-    RGB10_A2_uint,
+    RGB10_A2_uint = 0x0000001D,
     /// TODO
-    RGB10_A2_unorm,
+    RGB10_A2_unorm = 0x0000001E,
     /// TODO
-    RG11_B10_ufloat,
+    RG11_B10_ufloat = 0x0000001F,
     /// TODO
-    RGB9_E5_ufloat,
+    RGB9_E5_ufloat = 0x00000020,
     /// TODO
-    RG32_float,
+    RG32_float = 0x00000021,
     /// TODO
-    RG32_uint,
+    RG32_uint = 0x00000022,
     /// TODO
-    RG32_sint,
+    RG32_sint = 0x00000023,
     /// TODO
-    RGBA16_unorm,
+    RGBA16_unorm = 0x00000024,
     /// TODO
-    RGBA16_snorm,
+    RGBA16_snorm = 0x00000025,
     /// TODO
-    RGBA16_uint,
+    RGBA16_uint = 0x00000026,
     /// TODO
-    RGBA16_sint,
+    RGBA16_sint = 0x00000027,
     /// TODO
-    RGBA16_float,
+    RGBA16_float = 0x00000028,
     /// TODO
-    RGBA32_float,
+    RGBA32_float = 0x00000029,
     /// TODO
-    RGBA32_uint,
+    RGBA32_uint = 0x0000002A,
     /// TODO
-    RGBA32_sint,
+    RGBA32_sint = 0x0000002B,
     /// TODO
-    stencil8,
+    stencil8 = 0x0000002C,
     /// TODO
-    depth16_unorm,
+    depth16_unorm = 0x0000002D,
     /// TODO
-    depth24_plus,
+    depth24_plus = 0x0000002E,
     /// TODO
-    depth24_plus_stencil8,
+    depth24_plus_stencil8 = 0x0000002F,
     /// TODO
-    depth32_float,
+    depth32_float = 0x00000030,
     /// TODO
-    depth32_float_stencil8,
+    depth32_float_stencil8 = 0x00000031,
     /// TODO
-    BC1_RGBA_unorm,
+    BC1_RGBA_unorm = 0x00000032,
     /// TODO
-    BC1_RGBA_unorm_srgb,
+    BC1_RGBA_unorm_srgb = 0x00000033,
     /// TODO
-    BC2_RGBA_unorm,
+    BC2_RGBA_unorm = 0x00000034,
     /// TODO
-    BC2_RGBA_unorm_srgb,
+    BC2_RGBA_unorm_srgb = 0x00000035,
     /// TODO
-    BC3_RGBA_unorm,
+    BC3_RGBA_unorm = 0x00000036,
     /// TODO
-    BC3_RGBA_unorm_srgb,
+    BC3_RGBA_unorm_srgb = 0x00000037,
     /// TODO
-    BC4_R_unorm,
+    BC4_R_unorm = 0x00000038,
     /// TODO
-    BC4_R_snorm,
+    BC4_R_snorm = 0x00000039,
     /// TODO
-    BC5_RG_unorm,
+    BC5_RG_unorm = 0x0000003A,
     /// TODO
-    BC5_RG_snorm,
+    BC5_RG_snorm = 0x0000003B,
     /// TODO
-    BC6H_RGB_ufloat,
+    BC6H_RGB_ufloat = 0x0000003C,
     /// TODO
-    BC6H_RGB_float,
+    BC6H_RGB_float = 0x0000003D,
     /// TODO
-    BC7_RGBA_unorm,
+    BC7_RGBA_unorm = 0x0000003E,
     /// TODO
-    BC7_RGBA_unorm_srgb,
+    BC7_RGBA_unorm_srgb = 0x0000003F,
     /// TODO
-    ETC2_RGB8_unorm,
+    ETC2_RGB8_unorm = 0x00000040,
     /// TODO
-    ETC2_RGB8_unorm_srgb,
+    ETC2_RGB8_unorm_srgb = 0x00000041,
     /// TODO
-    ETC2_RGB8A1_unorm,
+    ETC2_RGB8A1_unorm = 0x00000042,
     /// TODO
-    ETC2_RGB8A1_unorm_srgb,
+    ETC2_RGB8A1_unorm_srgb = 0x00000043,
     /// TODO
-    ETC2_RGBA8_unorm,
+    ETC2_RGBA8_unorm = 0x00000044,
     /// TODO
-    ETC2_RGBA8_unorm_srgb,
+    ETC2_RGBA8_unorm_srgb = 0x00000045,
     /// TODO
-    EAC_R11_unorm,
+    EAC_R11_unorm = 0x00000046,
     /// TODO
-    EAC_R11_snorm,
+    EAC_R11_snorm = 0x00000047,
     /// TODO
-    EAC_RG11_unorm,
+    EAC_RG11_unorm = 0x00000048,
     /// TODO
-    EAC_RG11_snorm,
+    EAC_RG11_snorm = 0x00000049,
     /// TODO
-    ASTC_4x4_unorm,
+    ASTC_4x4_unorm = 0x0000004A,
     /// TODO
-    ASTC_4x4_unorm_srgb,
+    ASTC_4x4_unorm_srgb = 0x0000004B,
     /// TODO
-    ASTC_5x4_unorm,
+    ASTC_5x4_unorm = 0x0000004C,
     /// TODO
-    ASTC_5x4_unorm_srgb,
+    ASTC_5x4_unorm_srgb = 0x0000004D,
     /// TODO
-    ASTC_5x5_unorm,
+    ASTC_5x5_unorm = 0x0000004E,
     /// TODO
-    ASTC_5x5_unorm_srgb,
+    ASTC_5x5_unorm_srgb = 0x0000004F,
     /// TODO
-    ASTC_6x5_unorm,
+    ASTC_6x5_unorm = 0x00000050,
     /// TODO
-    ASTC_6x5_unorm_srgb,
+    ASTC_6x5_unorm_srgb = 0x00000051,
     /// TODO
-    ASTC_6x6_unorm,
+    ASTC_6x6_unorm = 0x00000052,
     /// TODO
-    ASTC_6x6_unorm_srgb,
+    ASTC_6x6_unorm_srgb = 0x00000053,
     /// TODO
-    ASTC_8x5_unorm,
+    ASTC_8x5_unorm = 0x00000054,
     /// TODO
-    ASTC_8x5_unorm_srgb,
+    ASTC_8x5_unorm_srgb = 0x00000055,
     /// TODO
-    ASTC_8x6_unorm,
+    ASTC_8x6_unorm = 0x00000056,
     /// TODO
-    ASTC_8x6_unorm_srgb,
+    ASTC_8x6_unorm_srgb = 0x00000057,
     /// TODO
-    ASTC_8x8_unorm,
+    ASTC_8x8_unorm = 0x00000058,
     /// TODO
-    ASTC_8x8_unorm_srgb,
+    ASTC_8x8_unorm_srgb = 0x00000059,
     /// TODO
-    ASTC_10x5_unorm,
+    ASTC_10x5_unorm = 0x0000005A,
     /// TODO
-    ASTC_10x5_unorm_srgb,
+    ASTC_10x5_unorm_srgb = 0x0000005B,
     /// TODO
-    ASTC_10x6_unorm,
+    ASTC_10x6_unorm = 0x0000005C,
     /// TODO
-    ASTC_10x6_unorm_srgb,
+    ASTC_10x6_unorm_srgb = 0x0000005D,
     /// TODO
-    ASTC_10x8_unorm,
+    ASTC_10x8_unorm = 0x0000005E,
     /// TODO
-    ASTC_10x8_unorm_srgb,
+    ASTC_10x8_unorm_srgb = 0x0000005F,
     /// TODO
-    ASTC_10x10_unorm,
+    ASTC_10x10_unorm = 0x00000060,
     /// TODO
-    ASTC_10x10_unorm_srgb,
+    ASTC_10x10_unorm_srgb = 0x00000061,
     /// TODO
-    ASTC_12x10_unorm,
+    ASTC_12x10_unorm = 0x00000062,
     /// TODO
-    ASTC_12x10_unorm_srgb,
+    ASTC_12x10_unorm_srgb = 0x00000063,
     /// TODO
-    ASTC_12x12_unorm,
+    ASTC_12x12_unorm = 0x00000064,
     /// TODO
-    ASTC_12x12_unorm_srgb,
+    ASTC_12x12_unorm_srgb = 0x00000065,
 };
 
 /// TODO
@@ -1005,186 +1005,186 @@ pub const TextureSampleType = enum(u32) {
     /// Indicates that this @ref WGPUTextureBindingLayout member of
     /// its parent @ref WGPUBindGroupLayoutEntry is not used.
     /// (See also @ref SentinelValues.)
-    binding_not_used,
+    binding_not_used = 0x00000000,
     /// `1`. Indicates no value is passed for this argument. See @ref SentinelValues.
-    undefined,
+    undefined = 0x00000001,
     /// TODO
-    float,
+    float = 0x00000002,
     /// TODO
-    unfilterable_float,
+    unfilterable_float = 0x00000003,
     /// TODO
-    depth,
+    depth = 0x00000004,
     /// TODO
-    sint,
+    sint = 0x00000005,
     /// TODO
-    uint,
+    uint = 0x00000006,
 };
 
 /// TODO
 pub const TextureViewDimension = enum(u32) {
     /// Indicates no value is passed for this argument. See @ref SentinelValues.
-    undefined,
+    undefined = 0x00000000,
     /// TODO
-    @"1D",
+    @"1D" = 0x00000001,
     /// TODO
-    @"2D",
+    @"2D" = 0x00000002,
     /// TODO
-    @"2D_array",
+    @"2D_array" = 0x00000003,
     /// TODO
-    cube,
+    cube = 0x00000004,
     /// TODO
-    cube_array,
+    cube_array = 0x00000005,
     /// TODO
-    @"3D",
+    @"3D" = 0x00000006,
 };
 
 /// TODO
 pub const ToneMappingMode = enum(u32) {
     /// TODO
-    standard,
+    standard = 0x00000001,
     /// TODO
-    extended,
+    extended = 0x00000002,
 };
 
 /// TODO
 pub const VertexFormat = enum(u32) {
     /// TODO
-    uint8,
+    uint8 = 0x00000001,
     /// TODO
-    uint8x2,
+    uint8x2 = 0x00000002,
     /// TODO
-    uint8x4,
+    uint8x4 = 0x00000003,
     /// TODO
-    sint8,
+    sint8 = 0x00000004,
     /// TODO
-    sint8x2,
+    sint8x2 = 0x00000005,
     /// TODO
-    sint8x4,
+    sint8x4 = 0x00000006,
     /// TODO
-    unorm8,
+    unorm8 = 0x00000007,
     /// TODO
-    unorm8x2,
+    unorm8x2 = 0x00000008,
     /// TODO
-    unorm8x4,
+    unorm8x4 = 0x00000009,
     /// TODO
-    snorm8,
+    snorm8 = 0x0000000A,
     /// TODO
-    snorm8x2,
+    snorm8x2 = 0x0000000B,
     /// TODO
-    snorm8x4,
+    snorm8x4 = 0x0000000C,
     /// TODO
-    uint16,
+    uint16 = 0x0000000D,
     /// TODO
-    uint16x2,
+    uint16x2 = 0x0000000E,
     /// TODO
-    uint16x4,
+    uint16x4 = 0x0000000F,
     /// TODO
-    sint16,
+    sint16 = 0x00000010,
     /// TODO
-    sint16x2,
+    sint16x2 = 0x00000011,
     /// TODO
-    sint16x4,
+    sint16x4 = 0x00000012,
     /// TODO
-    unorm16,
+    unorm16 = 0x00000013,
     /// TODO
-    unorm16x2,
+    unorm16x2 = 0x00000014,
     /// TODO
-    unorm16x4,
+    unorm16x4 = 0x00000015,
     /// TODO
-    snorm16,
+    snorm16 = 0x00000016,
     /// TODO
-    snorm16x2,
+    snorm16x2 = 0x00000017,
     /// TODO
-    snorm16x4,
+    snorm16x4 = 0x00000018,
     /// TODO
-    float16,
+    float16 = 0x00000019,
     /// TODO
-    float16x2,
+    float16x2 = 0x0000001A,
     /// TODO
-    float16x4,
+    float16x4 = 0x0000001B,
     /// TODO
-    float32,
+    float32 = 0x0000001C,
     /// TODO
-    float32x2,
+    float32x2 = 0x0000001D,
     /// TODO
-    float32x3,
+    float32x3 = 0x0000001E,
     /// TODO
-    float32x4,
+    float32x4 = 0x0000001F,
     /// TODO
-    uint32,
+    uint32 = 0x00000020,
     /// TODO
-    uint32x2,
+    uint32x2 = 0x00000021,
     /// TODO
-    uint32x3,
+    uint32x3 = 0x00000022,
     /// TODO
-    uint32x4,
+    uint32x4 = 0x00000023,
     /// TODO
-    sint32,
+    sint32 = 0x00000024,
     /// TODO
-    sint32x2,
+    sint32x2 = 0x00000025,
     /// TODO
-    sint32x3,
+    sint32x3 = 0x00000026,
     /// TODO
-    sint32x4,
+    sint32x4 = 0x00000027,
     /// TODO
-    unorm10__10__10__2,
+    unorm10__10__10__2 = 0x00000028,
     /// TODO
-    unorm8x4_B_G_R_A,
+    unorm8x4_B_G_R_A = 0x00000029,
     /// TODO
-    snorm10__10__10__2,
+    snorm10__10__10__2 = 0x0000002A,
 };
 
 /// TODO
 pub const VertexStepMode = enum(u32) {
     /// Indicates no value is passed for this argument. See @ref SentinelValues.
-    undefined,
+    undefined = 0x00000000,
     /// TODO
-    vertex,
+    vertex = 0x00000001,
     /// TODO
-    instance,
+    instance = 0x00000002,
 };
 
 /// Status returned from a call to ::wgpuInstanceWaitAny.
 pub const WaitStatus = enum(u32) {
     /// At least one WGPUFuture completed successfully.
-    success,
+    success = 0x00000001,
     /// The wait operation succeeded, but no WGPUFutures completed within the timeout.
-    timed_out,
+    timed_out = 0x00000002,
     /// The call was invalid for some reason (see @ref Wait-Any).
     /// Should produce @ref ImplementationDefinedLogging containing details.
-    @"error",
+    @"error" = 0x00000003,
 };
 
 /// TODO
 pub const WGSLLanguageFeatureName = enum(u32) {
     /// TODO
-    readonly_and_readwrite_storage_textures,
+    readonly_and_readwrite_storage_textures = 0x00000001,
     /// TODO
-    packed4x8_integer_dot_product,
+    packed4x8_integer_dot_product = 0x00000002,
     /// TODO
-    unrestricted_pointer_parameters,
+    unrestricted_pointer_parameters = 0x00000003,
     /// TODO
-    pointer_composite_access,
+    pointer_composite_access = 0x00000004,
     /// TODO
-    uniform_buffer_standard_layout,
+    uniform_buffer_standard_layout = 0x00000005,
     /// TODO
-    subgroup_id,
+    subgroup_id = 0x00000006,
     /// TODO
-    texture_and_sampler_let,
+    texture_and_sampler_let = 0x00000007,
     /// TODO
-    subgroup_uniformity,
+    subgroup_uniformity = 0x00000008,
     /// TODO
-    texture_formats_tier1,
+    texture_formats_tier1 = 0x00000009,
     /// TODO
-    linear_indexing,
+    linear_indexing = 0x0000000A,
     /// TODO
-    immediate_address_space,
+    immediate_address_space = 0x0000000B,
     /// TODO
-    buffer_view,
+    buffer_view = 0x0000000C,
     /// TODO
-    swizzle_assignment,
+    swizzle_assignment = 0x0000000D,
     /// TODO
-    fragment_depth,
+    fragment_depth = 0x0000000E,
 };
 
 pub const BufferUsage = packed struct(Flags) {
@@ -1264,12 +1264,12 @@ pub const TextureUsage = packed struct(Flags) {
 const BufferMapCallbackInfo = extern struct {
     nextInChain: ?*ChainedStruct,
     mode: CallbackMode,
-    callback: *fn (
+    callback: *const fn (
         status: MapAsyncStatus,
         message: StringView,
         user_data1: ?*void,
         user_data2: ?*void,
-    ) callconv(.C) void,
+    ) callconv(.c) void,
     userdata1: ?*void,
     userdata2: ?*void,
 };
@@ -1282,12 +1282,12 @@ const BufferMapCallbackInfo = extern struct {
 const CompilationInfoCallbackInfo = extern struct {
     nextInChain: ?*ChainedStruct,
     mode: CallbackMode,
-    callback: *fn (
+    callback: *const fn (
         status: CompilationInfoRequestStatus,
         compilation_info: *const CompilationInfo,
         user_data1: ?*void,
         user_data2: ?*void,
-    ) callconv(.C) void,
+    ) callconv(.c) void,
     userdata1: ?*void,
     userdata2: ?*void,
 };
@@ -1301,13 +1301,13 @@ const CompilationInfoCallbackInfo = extern struct {
 const CreateComputePipelineAsyncCallbackInfo = extern struct {
     nextInChain: ?*ChainedStruct,
     mode: CallbackMode,
-    callback: *fn (
+    callback: *const fn (
         status: CreatePipelineAsyncStatus,
         pipeline: ?*ComputePipeline,
         message: StringView,
         user_data1: ?*void,
         user_data2: ?*void,
-    ) callconv(.C) void,
+    ) callconv(.c) void,
     userdata1: ?*void,
     userdata2: ?*void,
 };
@@ -1321,13 +1321,13 @@ const CreateComputePipelineAsyncCallbackInfo = extern struct {
 const CreateRenderPipelineAsyncCallbackInfo = extern struct {
     nextInChain: ?*ChainedStruct,
     mode: CallbackMode,
-    callback: *fn (
+    callback: *const fn (
         status: CreatePipelineAsyncStatus,
         pipeline: ?*RenderPipeline,
         message: StringView,
         user_data1: ?*void,
         user_data2: ?*void,
-    ) callconv(.C) void,
+    ) callconv(.c) void,
     userdata1: ?*void,
     userdata2: ?*void,
 };
@@ -1344,13 +1344,13 @@ const CreateRenderPipelineAsyncCallbackInfo = extern struct {
 const DeviceLostCallbackInfo = extern struct {
     nextInChain: ?*ChainedStruct,
     mode: CallbackMode,
-    callback: *fn (
+    callback: *const fn (
         device: ?*const Device,
         reason: DeviceLostReason,
         message: StringView,
         user_data1: ?*void,
         user_data2: ?*void,
-    ) callconv(.C) void,
+    ) callconv(.c) void,
     userdata1: ?*void,
     userdata2: ?*void,
 };
@@ -1368,13 +1368,13 @@ const DeviceLostCallbackInfo = extern struct {
 const PopErrorScopeCallbackInfo = extern struct {
     nextInChain: ?*ChainedStruct,
     mode: CallbackMode,
-    callback: *fn (
+    callback: *const fn (
         status: PopErrorScopeStatus,
         type: ErrorType,
         message: StringView,
         user_data1: ?*void,
         user_data2: ?*void,
-    ) callconv(.C) void,
+    ) callconv(.c) void,
     userdata1: ?*void,
     userdata2: ?*void,
 };
@@ -1388,12 +1388,12 @@ const PopErrorScopeCallbackInfo = extern struct {
 const QueueWorkDoneCallbackInfo = extern struct {
     nextInChain: ?*ChainedStruct,
     mode: CallbackMode,
-    callback: *fn (
+    callback: *const fn (
         status: QueueWorkDoneStatus,
         message: StringView,
         user_data1: ?*void,
         user_data2: ?*void,
-    ) callconv(.C) void,
+    ) callconv(.c) void,
     userdata1: ?*void,
     userdata2: ?*void,
 };
@@ -1407,13 +1407,13 @@ const QueueWorkDoneCallbackInfo = extern struct {
 const RequestAdapterCallbackInfo = extern struct {
     nextInChain: ?*ChainedStruct,
     mode: CallbackMode,
-    callback: *fn (
+    callback: *const fn (
         status: RequestAdapterStatus,
         adapter: ?*Adapter,
         message: StringView,
         user_data1: ?*void,
         user_data2: ?*void,
-    ) callconv(.C) void,
+    ) callconv(.c) void,
     userdata1: ?*void,
     userdata2: ?*void,
 };
@@ -1427,13 +1427,13 @@ const RequestAdapterCallbackInfo = extern struct {
 const RequestDeviceCallbackInfo = extern struct {
     nextInChain: ?*ChainedStruct,
     mode: CallbackMode,
-    callback: *fn (
+    callback: *const fn (
         status: RequestDeviceStatus,
         device: ?*Device,
         message: StringView,
         user_data1: ?*void,
         user_data2: ?*void,
-    ) callconv(.C) void,
+    ) callconv(.c) void,
     userdata1: ?*void,
     userdata2: ?*void,
 };
@@ -1446,13 +1446,13 @@ const RequestDeviceCallbackInfo = extern struct {
 /// TODO
 const UncapturedErrorCallbackInfo = extern struct {
     nextInChain: ?*ChainedStruct,
-    callback: *fn (
+    callback: *const fn (
         device: ?*const Device,
         type: ErrorType,
         message: StringView,
         user_data1: ?*void,
         user_data2: ?*void,
-    ) callconv(.C) void,
+    ) callconv(.c) void,
     userdata1: ?*void,
     userdata2: ?*void,
 };
@@ -1549,12 +1549,17 @@ pub const Adapter = opaque {
         self: *Adapter,
         descriptor: ?*const DeviceDescriptor,
         callback: RequestDeviceCallbackInfo,
-    ) void;
+    ) Future;
 
     /// TODO
     /// descriptor
     /// TODO
     pub const requestDevice = wgpuAdapterRequestDevice;
+
+    extern "C" fn wgpuAdapterRelease(
+        self: *Adapter,
+    ) void;
+    pub const deinit = wgpuAdapterRelease;
 };
 pub const BindGroup = opaque {
     extern "C" fn wgpuBindGroupSetLabel(
@@ -1566,6 +1571,11 @@ pub const BindGroup = opaque {
     /// label
     /// TODO
     pub const setLabel = wgpuBindGroupSetLabel;
+
+    extern "C" fn wgpuBindGroupRelease(
+        self: *BindGroup,
+    ) void;
+    pub const deinit = wgpuBindGroupRelease;
 };
 pub const BindGroupLayout = opaque {
     extern "C" fn wgpuBindGroupLayoutSetLabel(
@@ -1577,6 +1587,11 @@ pub const BindGroupLayout = opaque {
     /// label
     /// TODO
     pub const setLabel = wgpuBindGroupLayoutSetLabel;
+
+    extern "C" fn wgpuBindGroupLayoutRelease(
+        self: *BindGroupLayout,
+    ) void;
+    pub const deinit = wgpuBindGroupLayoutRelease;
 };
 pub const Buffer = opaque {
     extern "C" fn wgpuBufferMapAsync(
@@ -1585,7 +1600,7 @@ pub const Buffer = opaque {
         offset: usize,
         size: usize,
         callback: BufferMapCallbackInfo,
-    ) void;
+    ) Future;
 
     /// TODO
     /// mode
@@ -1734,6 +1749,11 @@ pub const Buffer = opaque {
 
     /// TODO
     pub const destroy = wgpuBufferDestroy;
+
+    extern "C" fn wgpuBufferRelease(
+        self: *Buffer,
+    ) void;
+    pub const deinit = wgpuBufferRelease;
 };
 pub const CommandBuffer = opaque {
     extern "C" fn wgpuCommandBufferSetLabel(
@@ -1745,6 +1765,11 @@ pub const CommandBuffer = opaque {
     /// label
     /// TODO
     pub const setLabel = wgpuCommandBufferSetLabel;
+
+    extern "C" fn wgpuCommandBufferRelease(
+        self: *CommandBuffer,
+    ) void;
+    pub const deinit = wgpuCommandBufferRelease;
 };
 pub const CommandEncoder = opaque {
     extern "C" fn wgpuCommandEncoderFinish(
@@ -1940,6 +1965,11 @@ pub const CommandEncoder = opaque {
     /// label
     /// TODO
     pub const setLabel = wgpuCommandEncoderSetLabel;
+
+    extern "C" fn wgpuCommandEncoderRelease(
+        self: *CommandEncoder,
+    ) void;
+    pub const deinit = wgpuCommandEncoderRelease;
 };
 pub const ComputePassEncoder = opaque {
     extern "C" fn wgpuComputePassEncoderInsertDebugMarker(
@@ -2070,6 +2100,11 @@ pub const ComputePassEncoder = opaque {
     /// label
     /// TODO
     pub const setLabel = wgpuComputePassEncoderSetLabel;
+
+    extern "C" fn wgpuComputePassEncoderRelease(
+        self: *ComputePassEncoder,
+    ) void;
+    pub const deinit = wgpuComputePassEncoderRelease;
 };
 pub const ComputePipeline = opaque {
     extern "C" fn wgpuComputePipelineGetBindGroupLayout(
@@ -2093,6 +2128,11 @@ pub const ComputePipeline = opaque {
     /// label
     /// TODO
     pub const setLabel = wgpuComputePipelineSetLabel;
+
+    extern "C" fn wgpuComputePipelineRelease(
+        self: *ComputePipeline,
+    ) void;
+    pub const deinit = wgpuComputePipelineRelease;
 };
 pub const Device = opaque {
     extern "C" fn wgpuDeviceCreateBindGroup(
@@ -2162,7 +2202,7 @@ pub const Device = opaque {
         self: *Device,
         descriptor: *const ComputePipelineDescriptor,
         callback: CreateComputePipelineAsyncCallbackInfo,
-    ) void;
+    ) Future;
 
     /// TODO
     /// descriptor
@@ -2197,7 +2237,7 @@ pub const Device = opaque {
         self: *Device,
         descriptor: *const RenderPipelineDescriptor,
         callback: CreateRenderPipelineAsyncCallbackInfo,
-    ) void;
+    ) Future;
 
     /// TODO
     /// descriptor
@@ -2348,7 +2388,7 @@ pub const Device = opaque {
     extern "C" fn wgpuDevicePopErrorScope(
         self: *Device,
         callback: PopErrorScopeCallbackInfo,
-    ) void;
+    ) Future;
 
     /// Pops an error scope to the current thread's error scope stack,
     /// asynchronously returning the result. See @ref ErrorScopes.
@@ -2363,6 +2403,11 @@ pub const Device = opaque {
     /// label
     /// TODO
     pub const setLabel = wgpuDeviceSetLabel;
+
+    extern "C" fn wgpuDeviceRelease(
+        self: *Device,
+    ) void;
+    pub const deinit = wgpuDeviceRelease;
 };
 pub const ExternalTexture = opaque {
     extern "C" fn wgpuExternalTextureSetLabel(
@@ -2374,6 +2419,11 @@ pub const ExternalTexture = opaque {
     /// label
     /// TODO
     pub const setLabel = wgpuExternalTextureSetLabel;
+
+    extern "C" fn wgpuExternalTextureRelease(
+        self: *ExternalTexture,
+    ) void;
+    pub const deinit = wgpuExternalTextureRelease;
 };
 pub const Instance = opaque {
     extern "C" fn wgpuInstanceCreateSurface(
@@ -2423,7 +2473,7 @@ pub const Instance = opaque {
         self: *Instance,
         options: ?*const RequestAdapterOptions,
         callback: RequestAdapterCallbackInfo,
-    ) void;
+    ) Future;
 
     /// TODO
     /// options
@@ -2449,6 +2499,11 @@ pub const Instance = opaque {
     /// Return
     /// TODO
     pub const waitAny = wgpuInstanceWaitAny;
+
+    extern "C" fn wgpuInstanceRelease(
+        self: *Instance,
+    ) void;
+    pub const deinit = wgpuInstanceRelease;
 };
 pub const PipelineLayout = opaque {
     extern "C" fn wgpuPipelineLayoutSetLabel(
@@ -2460,6 +2515,11 @@ pub const PipelineLayout = opaque {
     /// label
     /// TODO
     pub const setLabel = wgpuPipelineLayoutSetLabel;
+
+    extern "C" fn wgpuPipelineLayoutRelease(
+        self: *PipelineLayout,
+    ) void;
+    pub const deinit = wgpuPipelineLayoutRelease;
 };
 pub const QuerySet = opaque {
     extern "C" fn wgpuQuerySetSetLabel(
@@ -2496,6 +2556,11 @@ pub const QuerySet = opaque {
 
     /// TODO
     pub const destroy = wgpuQuerySetDestroy;
+
+    extern "C" fn wgpuQuerySetRelease(
+        self: *QuerySet,
+    ) void;
+    pub const deinit = wgpuQuerySetRelease;
 };
 pub const Queue = opaque {
     extern "C" fn wgpuQueueSubmit(
@@ -2521,7 +2586,7 @@ pub const Queue = opaque {
     extern "C" fn wgpuQueueOnSubmittedWorkDone(
         self: *Queue,
         callback: QueueWorkDoneCallbackInfo,
-    ) void;
+    ) Future;
 
     /// TODO
     pub const onSubmittedWorkDone = wgpuQueueOnSubmittedWorkDone;
@@ -2577,6 +2642,11 @@ pub const Queue = opaque {
     /// label
     /// TODO
     pub const setLabel = wgpuQueueSetLabel;
+
+    extern "C" fn wgpuQueueRelease(
+        self: *Queue,
+    ) void;
+    pub const deinit = wgpuQueueRelease;
 };
 pub const RenderBundle = opaque {
     extern "C" fn wgpuRenderBundleSetLabel(
@@ -2588,6 +2658,11 @@ pub const RenderBundle = opaque {
     /// label
     /// TODO
     pub const setLabel = wgpuRenderBundleSetLabel;
+
+    extern "C" fn wgpuRenderBundleRelease(
+        self: *RenderBundle,
+    ) void;
+    pub const deinit = wgpuRenderBundleRelease;
 };
 pub const RenderBundleEncoder = opaque {
     extern "C" fn wgpuRenderBundleEncoderSetPipeline(
@@ -2799,6 +2874,11 @@ pub const RenderBundleEncoder = opaque {
     /// label
     /// TODO
     pub const setLabel = wgpuRenderBundleEncoderSetLabel;
+
+    extern "C" fn wgpuRenderBundleEncoderRelease(
+        self: *RenderBundleEncoder,
+    ) void;
+    pub const deinit = wgpuRenderBundleEncoderRelease;
 };
 pub const RenderPassEncoder = opaque {
     extern "C" fn wgpuRenderPassEncoderSetPipeline(
@@ -3108,6 +3188,11 @@ pub const RenderPassEncoder = opaque {
     /// label
     /// TODO
     pub const setLabel = wgpuRenderPassEncoderSetLabel;
+
+    extern "C" fn wgpuRenderPassEncoderRelease(
+        self: *RenderPassEncoder,
+    ) void;
+    pub const deinit = wgpuRenderPassEncoderRelease;
 };
 pub const RenderPipeline = opaque {
     extern "C" fn wgpuRenderPipelineGetBindGroupLayout(
@@ -3131,6 +3216,11 @@ pub const RenderPipeline = opaque {
     /// label
     /// TODO
     pub const setLabel = wgpuRenderPipelineSetLabel;
+
+    extern "C" fn wgpuRenderPipelineRelease(
+        self: *RenderPipeline,
+    ) void;
+    pub const deinit = wgpuRenderPipelineRelease;
 };
 pub const Sampler = opaque {
     extern "C" fn wgpuSamplerSetLabel(
@@ -3142,12 +3232,17 @@ pub const Sampler = opaque {
     /// label
     /// TODO
     pub const setLabel = wgpuSamplerSetLabel;
+
+    extern "C" fn wgpuSamplerRelease(
+        self: *Sampler,
+    ) void;
+    pub const deinit = wgpuSamplerRelease;
 };
 pub const ShaderModule = opaque {
     extern "C" fn wgpuShaderModuleGetCompilationInfo(
         self: *ShaderModule,
         callback: CompilationInfoCallbackInfo,
-    ) void;
+    ) Future;
 
     /// TODO
     pub const getCompilationInfo = wgpuShaderModuleGetCompilationInfo;
@@ -3161,6 +3256,11 @@ pub const ShaderModule = opaque {
     /// label
     /// TODO
     pub const setLabel = wgpuShaderModuleSetLabel;
+
+    extern "C" fn wgpuShaderModuleRelease(
+        self: *ShaderModule,
+    ) void;
+    pub const deinit = wgpuShaderModuleRelease;
 };
 pub const Surface = opaque {
     extern "C" fn wgpuSurfaceConfigure(
@@ -3233,6 +3333,11 @@ pub const Surface = opaque {
     /// label
     /// The new label.
     pub const setLabel = wgpuSurfaceSetLabel;
+
+    extern "C" fn wgpuSurfaceRelease(
+        self: *Surface,
+    ) void;
+    pub const deinit = wgpuSurfaceRelease;
 };
 pub const Texture = opaque {
     extern "C" fn wgpuTextureCreateView(
@@ -3344,6 +3449,11 @@ pub const Texture = opaque {
 
     /// TODO
     pub const destroy = wgpuTextureDestroy;
+
+    extern "C" fn wgpuTextureRelease(
+        self: *Texture,
+    ) void;
+    pub const deinit = wgpuTextureRelease;
 };
 pub const TextureView = opaque {
     extern "C" fn wgpuTextureViewSetLabel(
@@ -3355,6 +3465,11 @@ pub const TextureView = opaque {
     /// label
     /// TODO
     pub const setLabel = wgpuTextureViewSetLabel;
+
+    extern "C" fn wgpuTextureViewRelease(
+        self: *TextureView,
+    ) void;
+    pub const deinit = wgpuTextureViewRelease;
 };
 pub const AdapterInfo = extern struct {
     chain: ChainedStruct,

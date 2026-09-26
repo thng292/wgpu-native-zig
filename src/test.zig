@@ -1,7 +1,18 @@
 const wgpu = @import("webgpu.json.zig");
 const std = @import("std");
 
-test "Compute" {
-    const tmp: wgpu.MapMode = .{ .read = true };
-    try std.testing.expect(@as(u64, @bitCast(tmp)) == 0x0000000000000001);
+test "Device & Adapter" {
+    std.testing.log_level = .debug;
+    var instance = wgpu.createInstance(null);
+    defer instance.deinit();
+
+    var adapter = wgpu.helpers.requestAdapterSync(instance, null, std.testing.io).?;
+    defer adapter.deinit();
+
+    var device = wgpu.helpers.requestDeviceSync(adapter, null, std.testing.io).?;
+    defer device.deinit();
+    var adapter_info = std.mem.zeroes(wgpu.AdapterInfo);
+    const status = device.getAdapterInfo(&adapter_info);
+    try std.testing.expect(status == .success);
+    std.debug.print("{}", .{adapter_info});
 }

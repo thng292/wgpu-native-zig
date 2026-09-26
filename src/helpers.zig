@@ -7,7 +7,7 @@ pub fn requestAdapterSync(instance: *wgpu.Instance, options: ?*const wgpu.Reques
     const UserData = struct {
         result: ?*wgpu.Adapter = null,
         done: std.Io.Mutex = .init,
-        io: *std.Io,
+        io: *const std.Io,
 
         fn callback(status: wgpu.RequestAdapterStatus, adapter: ?*wgpu.Adapter, message: wgpu.StringView, user_data1: ?*void, _: ?*void) callconv(.c) void {
             const self: *@This() = @ptrCast(@alignCast(user_data1.?));
@@ -17,15 +17,16 @@ pub fn requestAdapterSync(instance: *wgpu.Instance, options: ?*const wgpu.Reques
                 .callback_cancelled => self.result = null,
                 .unavailable => self.result = null,
             }
+            logger.debug("Request Adapter status: {t}", .{status});
             if (message.toSlice()) |msg| {
                 logger.err("{s}", .{msg});
             }
-            std.Io.Mutex.unlock(&self.done, self.io);
+            std.Io.Mutex.unlock(&self.done, self.io.*);
         }
     };
-    var user_data: UserData = .{};
+    var user_data: UserData = .{ .io = &io };
     std.Io.Mutex.lockUncancelable(&user_data.done, io);
-    instance.requestAdapter(options, .{
+    _ = instance.requestAdapter(options, .{
         .nextInChain = null,
         .mode = .allow_spontaneous,
         .callback = UserData.callback,
@@ -40,7 +41,7 @@ pub fn requestDeviceSync(adapter: *wgpu.Adapter, descriptor: ?*const wgpu.Device
     const UserData = struct {
         result: ?*wgpu.Device = null,
         done: std.Io.Mutex = .init,
-        io: *std.Io,
+        io: *const std.Io,
 
         fn callback(
             status: wgpu.RequestDeviceStatus,
@@ -54,17 +55,17 @@ pub fn requestDeviceSync(adapter: *wgpu.Adapter, descriptor: ?*const wgpu.Device
                 .success => self.result = device,
                 .@"error" => self.result = null,
                 .callback_cancelled => self.result = null,
-                .unavailable => self.result = null,
             }
+            logger.debug("Request Device status: {t}", .{status});
             if (message.toSlice()) |msg| {
                 logger.err("{s}", .{msg});
             }
-            std.Io.Mutex.unlock(&self.done, self.io);
+            std.Io.Mutex.unlock(&self.done, self.io.*);
         }
     };
-    var user_data: UserData = .{};
+    var user_data: UserData = .{ .io = &io };
     std.Io.Mutex.lockUncancelable(&user_data.done, io);
-    adapter.requestDevice(descriptor, .{
+    _ = adapter.requestDevice(descriptor, .{
         .nextInChain = null,
         .mode = .allow_spontaneous,
         .callback = UserData.callback,

@@ -110,17 +110,13 @@ fn generateZigCode(ctx: *Context) ![:0]u8 {
         _ = try writer.write("pub const ");
         try convertSnakeToPascal(enumm.name, writer);
         _ = try writer.write(" = enum(u32) {\n");
-        for (enumm.entries) |entry_| {
+        for (enumm.entries, 0..) |entry_, i| {
             if (entry_ == null) continue;
             const entry = entry_.?;
             if (entry.doc.len > 0) {
                 try renderComment(entry.doc, .doc, writer);
             }
-            if (entry.value) |val| {
-                try writer.print("@\"{s}\" = 0x{X:0>8},\n", .{ entry.name, val });
-            } else {
-                try writer.print("@\"{s}\",\n", .{entry.name});
-            }
+            try writer.print("@\"{s}\" = 0x{X:0>8},\n", .{ entry.name, entry.value orelse i });
         }
         _ = try writer.write("};\n\n");
     }
@@ -168,7 +164,7 @@ fn generateZigCode(ctx: *Context) ![:0]u8 {
         if (std.mem.eql(u8, cb.style, "callback_mode")) {
             _ = try writer.write("mode: CallbackMode,\n");
         }
-        _ = try writer.write("callback: *");
+        _ = try writer.write("callback: *const ");
         // Callback type w/o *
         _ = try writer.write("fn (");
         for (cb.args) |arg| {
@@ -182,7 +178,7 @@ fn generateZigCode(ctx: *Context) ![:0]u8 {
             try writer.writeByte(',');
         }
         _ = try writer.write("user_data1: ?*void, user_data2: ?*void,");
-        _ = try writer.write(") callconv(.C) void,\n");
+        _ = try writer.write(") callconv(.c) void,\n");
 
         _ = try writer.write(
             \\userdata1: ?*void,
@@ -236,6 +232,19 @@ fn generateZigCode(ctx: *Context) ![:0]u8 {
             try renderZigMapper(ctx, obj.name, tmp_fn, writer);
             try writer.writeByte('\n');
         }
+        // Need a release function too
+        const release: Function = .{
+            .name = "release",
+            .returns = null,
+            .args = &.{ParameterType{
+                .name = "self",
+                .type = try std.fmt.allocPrint(ctx.allocator, "object.{s}", .{obj.name}),
+            }},
+        };
+        try renderCFunction(ctx, obj.name, release, writer);
+        _ = try writer.write("pub const deinit = wgpu");
+        try renderCFunctionName(ctx, obj.name, release, writer);
+        _ = try writer.write(";\n");
         _ = try writer.write("};\n");
     }
 
@@ -424,6 +433,8 @@ fn renderCFunction(ctx: *Context, prefix: []const u8, function: Function, writer
             try renderOptionalAndPtr(rt.optional, rt.pointer, writer);
         }
         try renderTypeName(ctx, rt.type, writer);
+    } else if (function.callback) |_| {
+        _ = try writer.write("Future");
     } else {
         _ = try writer.write("void");
     }
@@ -557,6 +568,8 @@ fn renderZigMapper(ctx: *Context, prefix: []const u8, function: Function, writer
             } else {
                 try renderOptionalAndPtr(rt.optional, rt.pointer, writer);
             }
+        } else if (function.callback) |_| {
+            _ = try writer.write("Future");
         } else {
             _ = try writer.write("void");
         }
@@ -718,7 +731,7 @@ pub const Function = struct {
 
     returns: ?ParameterType = null,
     callback: ?[]const u8 = null,
-    args: []ParameterType = &[_]ParameterType{},
+    args: []const ParameterType = &[_]ParameterType{},
 };
 
 pub const Struct = struct {
