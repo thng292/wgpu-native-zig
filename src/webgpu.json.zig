@@ -41,6 +41,8 @@ pub const StringView = extern struct {
     data: ?[*]const u8 = null,
     length: usize = 0,
 
+    const empty: StringView = .{ .data = null, .length = 0 };
+
     /// Helper to construct a StringView from a standard Zig slice.
     pub fn fromSlice(slice: []const u8) StringView {
         return .{
@@ -2015,7 +2017,7 @@ pub const ComputePassEncoder = opaque {
         group_index: u32,
         group: ?*BindGroup,
         dynamic_offsets_count: usize,
-        dynamic_offsets: *const u32,
+        dynamic_offsets: [*]const u32,
     ) void;
 
     /// TODO
@@ -2029,7 +2031,7 @@ pub const ComputePassEncoder = opaque {
         self: *ComputePassEncoder,
         group_index: u32,
         group: ?*BindGroup,
-        dynamic_offsets: []*const u32,
+        dynamic_offsets: []const u32,
     ) void {
         wgpuComputePassEncoderSetBindGroup(
             self,
@@ -2567,7 +2569,7 @@ pub const Queue = opaque {
     extern "C" fn wgpuQueueSubmit(
         self: *Queue,
         commands_count: usize,
-        commands: *const CommandBuffer,
+        commands: [*]const *const CommandBuffer,
     ) void;
 
     /// TODO
@@ -2575,7 +2577,7 @@ pub const Queue = opaque {
     /// TODO
     pub fn submit(
         self: *Queue,
-        commands: []*const CommandBuffer,
+        commands: []const *const CommandBuffer,
     ) void {
         wgpuQueueSubmit(
             self,
@@ -2681,7 +2683,7 @@ pub const RenderBundleEncoder = opaque {
         group_index: u32,
         group: ?*BindGroup,
         dynamic_offsets_count: usize,
-        dynamic_offsets: *const u32,
+        dynamic_offsets: [*]const u32,
     ) void;
 
     /// TODO
@@ -2695,7 +2697,7 @@ pub const RenderBundleEncoder = opaque {
         self: *RenderBundleEncoder,
         group_index: u32,
         group: ?*BindGroup,
-        dynamic_offsets: []*const u32,
+        dynamic_offsets: []const u32,
     ) void {
         wgpuRenderBundleEncoderSetBindGroup(
             self,
@@ -2897,7 +2899,7 @@ pub const RenderPassEncoder = opaque {
         group_index: u32,
         group: ?*BindGroup,
         dynamic_offsets_count: usize,
-        dynamic_offsets: *const u32,
+        dynamic_offsets: [*]const u32,
     ) void;
 
     /// TODO
@@ -2911,7 +2913,7 @@ pub const RenderPassEncoder = opaque {
         self: *RenderPassEncoder,
         group_index: u32,
         group: ?*BindGroup,
-        dynamic_offsets: []*const u32,
+        dynamic_offsets: []const u32,
     ) void {
         wgpuRenderPassEncoderSetBindGroup(
             self,
@@ -3008,7 +3010,7 @@ pub const RenderPassEncoder = opaque {
     extern "C" fn wgpuRenderPassEncoderExecuteBundles(
         self: *RenderPassEncoder,
         bundles_count: usize,
-        bundles: *const RenderBundle,
+        bundles: [*]const *const RenderBundle,
     ) void;
 
     /// TODO
@@ -3016,7 +3018,7 @@ pub const RenderPassEncoder = opaque {
     /// TODO
     pub fn executeBundles(
         self: *RenderPassEncoder,
-        bundles: []*const RenderBundle,
+        bundles: []const *const RenderBundle,
     ) void {
         wgpuRenderPassEncoderExecuteBundles(
             self,

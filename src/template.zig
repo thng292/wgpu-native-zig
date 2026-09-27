@@ -25,6 +25,8 @@ pub const StringView = extern struct {
     data: ?[*]const u8 = null,
     length: usize = 0,
 
+    const empty: StringView = .{ .data = null, .length = 0 };
+
     /// Helper to construct a StringView from a standard Zig slice.
     pub fn fromSlice(slice: []const u8) StringView {
         return .{

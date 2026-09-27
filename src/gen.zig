@@ -386,8 +386,18 @@ fn renderCParam(ctx: *Context, param: ParameterType, writer: *std.Io.Writer) !vo
         _ = try writer.write("_count: usize,");
 
         _ = try writer.write(param.name.?);
-        try writer.writeByte(':');
-        try renderOptionalAndPtr(param.optional, param.pointer, writer);
+        _ = try writer.write(": [*]");
+        if (param.pointer) |ptr| {
+            switch (ptr) {
+                .mutable => {},
+                .immutable => _ = try writer.write("const "),
+            }
+        }
+        if (isParamObject(.{ .type = inner_type })) {
+            try renderOptionalAndPtr(param.optional, .immutable, writer);
+        } else {
+            try renderOptionalAndPtr(param.optional, null, writer);
+        }
         try renderTypeName(ctx, inner_type, writer);
     } else {
         _ = try writer.write(param.name.?);
@@ -556,7 +566,17 @@ fn renderZigMapper(ctx: *Context, prefix: []const u8, function: Function, writer
             if (isParamArray(arg)) |inner_type| {
                 _ = try writer.write(arg.name.?);
                 _ = try writer.write(": []");
-                try renderOptionalAndPtr(arg.optional, arg.pointer, writer);
+                if (arg.pointer) |ptr| {
+                    switch (ptr) {
+                        .mutable => {},
+                        .immutable => _ = try writer.write("const "),
+                    }
+                }
+                if (isParamObject(.{ .type = inner_type })) {
+                    try renderOptionalAndPtr(arg.optional, .immutable, writer);
+                } else {
+                    try renderOptionalAndPtr(arg.optional, null, writer);
+                }
                 try renderTypeName(ctx, inner_type, writer);
             } else {
                 try renderCParam(ctx, arg, writer);
