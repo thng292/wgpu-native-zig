@@ -71,7 +71,9 @@ pub fn build(b: *std.Build) void {
         }) catch unreachable;
         var iter = example_dir.iterate();
         while (iter.next(b.graph.io) catch unreachable) |example| {
-            to_be_built.append(b.allocator, example.name) catch unreachable;
+            if (example.kind == .file and std.mem.endsWith(u8, example.name, ".zig")) {
+                to_be_built.append(b.allocator, example.name) catch unreachable;
+            }
         }
     }
     for (to_be_built.items) |example| {
