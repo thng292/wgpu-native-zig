@@ -47,7 +47,7 @@ pub const WGPUProc = ?*const fn () callconv(.c) void;
 pub extern "C" fn wgpuGetProcAddress(procName: StringView) WGPUProc;
 
 pub const ChainedStruct = extern struct {
-    next: ?*ChainedStruct,
+    next: ?*const ChainedStruct,
     sType: SType,
 };
 

@@ -158,7 +158,7 @@ fn generateZigCode(ctx: *Context) ![:0]u8 {
         try convertSnakeToPascal(cb.name, writer);
         _ = try writer.write(
             \\CallbackInfo = extern struct {
-            \\ nextInChain: ?*ChainedStruct,
+            \\ nextInChain: ?*const ChainedStruct,
             \\
         );
         if (std.mem.eql(u8, cb.style, "callback_mode")) {
@@ -381,14 +381,14 @@ fn renderTypeName(ctx: *Context, type_name: []const u8, writer: *std.Io.Writer) 
 }
 
 fn renderCParam(ctx: *Context, param: ParameterType, writer: *std.Io.Writer) !void {
-    if (isParamArray(param)) {
+    if (isParamArray(param)) |inner_type| {
         _ = try writer.write(param.name.?);
-        _ = try writer.write("Count: usize,");
+        _ = try writer.write("_count: usize,");
 
         _ = try writer.write(param.name.?);
         try writer.writeByte(':');
         try renderOptionalAndPtr(param.optional, param.pointer, writer);
-        try renderTypeName(ctx, param.type[ARRAY_START.len .. param.type.len - 1], writer);
+        try renderTypeName(ctx, inner_type, writer);
     } else {
         _ = try writer.write(param.name.?);
         try writer.writeByte(':');
@@ -463,7 +463,7 @@ fn renderStruct(ctx: *Context, structt: Struct, writer: *std.Io.Writer) !void {
     _ = try writer.write(" = extern struct {\n");
     if (std.mem.eql(u8, structt.type, "extensible") //
     or std.mem.eql(u8, structt.type, "extensible_callback_arg")) {
-        _ = try writer.write("chain: ?*ChainedStruct,\n");
+        _ = try writer.write("chain: ?*const ChainedStruct = null,\n");
     } else if (std.mem.eql(u8, structt.type, "extension")) {
         _ = try writer.write("chain: ChainedStruct,\n");
     } else if (std.mem.eql(u8, structt.type, "standalone")) {} else {
@@ -473,13 +473,23 @@ fn renderStruct(ctx: *Context, structt: Struct, writer: *std.Io.Writer) !void {
         if (member.doc.len > 0) {
             try renderComment(member.doc, .doc, writer);
         }
-        if (isParamArray(member)) {
+        if (isParamArray(member)) |inner_type| {
             _ = try writer.write(member.name.?);
-            _ = try writer.write("Count: usize,\n");
+            _ = try writer.write("_count: usize,\n");
 
-            try writer.print("@\"{s}\": ", .{member.name.?});
-            try renderOptionalAndPtr(member.optional, member.pointer, writer);
-            try renderTypeName(ctx, member.type[ARRAY_START.len .. member.type.len - 1], writer);
+            try writer.print("@\"{s}\": [*]", .{member.name.?});
+            if (member.pointer) |ptr| {
+                switch (ptr) {
+                    .mutable => {},
+                    .immutable => _ = try writer.write("const "),
+                }
+            }
+            if (isParamObject(.{ .type = inner_type })) {
+                try renderOptionalAndPtr(member.optional, .immutable, writer);
+            } else {
+                try renderOptionalAndPtr(member.optional, null, writer);
+            }
+            try renderTypeName(ctx, inner_type, writer);
         } else {
             try writer.print("@\"{s}\": ", .{member.name.?});
             if (isParamObject(member)) {
@@ -519,7 +529,7 @@ fn renderStruct(ctx: *Context, structt: Struct, writer: *std.Io.Writer) !void {
 fn renderZigMapper(ctx: *Context, prefix: []const u8, function: Function, writer: *std.Io.Writer) !void {
     var has_array = false;
     for (function.args) |arg| {
-        has_array = has_array or isParamArray(arg);
+        has_array = has_array or isParamArray(arg) != null;
     }
     if (function.doc.len > 0) {
         try renderComment(function.doc, .doc, writer);
@@ -543,11 +553,11 @@ fn renderZigMapper(ctx: *Context, prefix: []const u8, function: Function, writer
 
         try writer.writeByte('(');
         for (function.args) |arg| {
-            if (isParamArray(arg)) {
+            if (isParamArray(arg)) |inner_type| {
                 _ = try writer.write(arg.name.?);
                 _ = try writer.write(": []");
                 try renderOptionalAndPtr(arg.optional, arg.pointer, writer);
-                try renderTypeName(ctx, arg.type[ARRAY_START.len .. arg.type.len - 1], writer);
+                try renderTypeName(ctx, inner_type, writer);
             } else {
                 try renderCParam(ctx, arg, writer);
             }
@@ -579,7 +589,7 @@ fn renderZigMapper(ctx: *Context, prefix: []const u8, function: Function, writer
         _ = try writer.write("(");
         // Call the C function
         for (function.args) |arg| {
-            if (isParamArray(arg)) {
+            if (isParamArray(arg)) |_| {
                 try writer.print("{s}.len, {s}.ptr", .{ arg.name.?, arg.name.? });
             } else {
                 _ = try writer.write(arg.name.?);
@@ -598,8 +608,11 @@ fn renderZigMapper(ctx: *Context, prefix: []const u8, function: Function, writer
     }
 }
 
-fn isParamArray(param: ParameterType) bool {
-    return std.mem.startsWith(u8, param.type, ARRAY_START);
+fn isParamArray(param: ParameterType) ?[]const u8 {
+    return if (std.mem.startsWith(u8, param.type, ARRAY_START))
+        return param.type[ARRAY_START.len .. param.type.len - 1]
+    else
+        null;
 }
 
 fn isParamObject(param: ParameterType) bool {
