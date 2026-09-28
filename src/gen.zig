@@ -492,32 +492,8 @@ fn renderStruct(ctx: *Context, structt: Struct, writer: *std.Io.Writer) !void {
         if (member.doc.len > 0) {
             try renderComment(member.doc, .doc, writer);
         }
-        if (isParamArray(member)) |inner_type| {
-            _ = try writer.write(member.name.?);
-            _ = try writer.write("_count: usize,\n");
-
-            try writer.print("@\"{s}\": [*]", .{member.name.?});
-            if (member.pointer) |ptr| {
-                switch (ptr) {
-                    .mutable => {},
-                    .immutable => _ = try writer.write("const "),
-                }
-            }
-            if (isParamObject(.{ .type = inner_type })) {
-                try renderOptionalAndPtr(member.optional, .immutable, writer);
-            } else {
-                try renderOptionalAndPtr(member.optional, null, writer);
-            }
-            try renderTypeName(ctx, inner_type, writer);
-        } else {
-            try writer.print("@\"{s}\": ", .{member.name.?});
-            if (isParamObject(member)) {
-                try renderOptionalAndPtr(member.optional, member.pointer orelse .mutable, writer);
-            } else {
-                try renderOptionalAndPtr(member.optional, member.pointer, writer);
-            }
-            try renderTypeName(ctx, member.type, writer);
-        }
+        try renderCParam(ctx, member, writer);
+        try renderDefault(ctx, member, writer);
         _ = try writer.write(",\n");
     }
     if (structt.free_members) {
@@ -634,6 +610,48 @@ fn renderZigMapper(ctx: *Context, prefix: []const u8, function: Function, writer
         _ = try writer.write("=wgpu");
         try renderCFunctionName(ctx, prefix, function, writer);
         _ = try writer.write(";\n");
+    }
+}
+
+fn renderDefault(ctx: *Context, param: ParameterType, writer: *std.Io.Writer) !void {
+    if (param.default) |value| {
+        switch (value) {
+            .string => |v| {
+                if (queryRef(ctx, v)) |result| {
+                    if (result == .constant) {
+                        const constant_name = try std.ascii.allocUpperString(
+                            ctx.allocator,
+                            result.constant.name,
+                        );
+                        defer ctx.allocator.free(constant_name);
+
+                        _ = try writer.write(" = ");
+                        _ = try writer.write(constant_name);
+                    }
+                }
+                if (std.mem.startsWith(u8, v, "0x")) {
+                    try writer.print(" = @bitCast({s})", .{v});
+                }
+                if (std.mem.eql(u8, v, "zero")) {
+                    _ = try writer.write(" = std.mem.zeroes(");
+                    try renderTypeName(ctx, param.type, writer);
+                    _ = try writer.write(")");
+                }
+            },
+            .bool => |b| {
+                _ = try writer.write(" = ");
+                if (b) {
+                    _ = try writer.write("TRUE");
+                } else {
+                    _ = try writer.write("FALSE");
+                }
+            },
+            .float, .integer => {
+                _ = try writer.write(" = ");
+                try std.json.Stringify.value(value, .{}, writer);
+            },
+            else => {},
+        }
     }
 }
 

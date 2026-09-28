@@ -3524,7 +3524,7 @@ pub const BindGroupEntry = extern struct {
     /// If the binding is a buffer, this is the byte size of the binding range
     /// (@ref WGPU_WHOLE_SIZE means the binding ends at the end of the buffer).
     /// Otherwise ignored.
-    size: u64,
+    size: u64 = WHOLE_SIZE,
     /// Set this if the binding is a sampler object.
     /// Otherwise must be null.
     sampler: ?*Sampler,
@@ -3549,13 +3549,13 @@ pub const BindGroupLayoutEntry = extern struct {
     /// If non-zero, this entry defines a binding array with this size.
     binding_array_size: u32,
     /// TODO
-    buffer: BufferBindingLayout,
+    buffer: BufferBindingLayout = std.mem.zeroes(BufferBindingLayout),
     /// TODO
-    sampler: SamplerBindingLayout,
+    sampler: SamplerBindingLayout = std.mem.zeroes(SamplerBindingLayout),
     /// TODO
-    texture: TextureBindingLayout,
+    texture: TextureBindingLayout = std.mem.zeroes(TextureBindingLayout),
     /// TODO
-    storage_texture: StorageTextureBindingLayout,
+    storage_texture: StorageTextureBindingLayout = std.mem.zeroes(StorageTextureBindingLayout),
 };
 pub const BlendComponent = extern struct {
     /// If set to @ref WGPUBlendOperation_Undefined,
@@ -3580,9 +3580,9 @@ pub const BufferBindingLayout = extern struct {
     /// [defaults](@ref SentinelValues) to @ref WGPUBufferBindingType_Uniform.
     type: BufferBindingType,
     /// TODO
-    has_dynamic_offset: Bool,
+    has_dynamic_offset: Bool = FALSE,
     /// TODO
-    min_binding_size: u64,
+    min_binding_size: u64 = 0,
 };
 pub const BufferDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
@@ -3595,7 +3595,7 @@ pub const BufferDescriptor = extern struct {
     /// When true, the buffer is mapped in write mode at creation. It should thus be unmapped once its initial data has been written.
     ///
     /// @note Mapping at creation does **not** require the usage @ref WGPUBufferUsage_MapWrite.
-    mapped_at_creation: Bool,
+    mapped_at_creation: Bool = FALSE,
 };
 pub const Color = extern struct {
     r: f64,
@@ -3627,13 +3627,13 @@ pub const CommandEncoderDescriptor = extern struct {
 pub const CompatibilityModeLimits = extern struct {
     chain: ChainedStruct,
     /// TODO
-    max_storage_buffers_in_vertex_stage: u32,
+    max_storage_buffers_in_vertex_stage: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_storage_textures_in_vertex_stage: u32,
+    max_storage_textures_in_vertex_stage: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_storage_buffers_in_fragment_stage: u32,
+    max_storage_buffers_in_fragment_stage: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_storage_textures_in_fragment_stage: u32,
+    max_storage_textures_in_fragment_stage: u32 = LIMIT_U32_UNDEFINED,
 };
 pub const CompilationInfo = extern struct {
     chain: ?*const ChainedStruct = null,
@@ -3704,19 +3704,19 @@ pub const DepthStencilState = extern struct {
     /// TODO
     stencil_back: StencilFaceState,
     /// TODO
-    stencil_read_mask: u32,
+    stencil_read_mask: u32 = @bitCast(0xFFFFFFFF),
     /// TODO
-    stencil_write_mask: u32,
+    stencil_write_mask: u32 = @bitCast(0xFFFFFFFF),
     /// TODO
-    depth_bias: i32,
-    /// TODO
-    ///
-    /// If non-finite, produces a @ref NonFiniteFloatValueError.
-    depth_bias_slope_scale: f32,
+    depth_bias: i32 = 0,
     /// TODO
     ///
     /// If non-finite, produces a @ref NonFiniteFloatValueError.
-    depth_bias_clamp: f32,
+    depth_bias_slope_scale: f32 = 0,
+    /// TODO
+    ///
+    /// If non-finite, produces a @ref NonFiniteFloatValueError.
+    depth_bias_clamp: f32 = 0,
 };
 pub const DeviceDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
@@ -3741,9 +3741,9 @@ pub const Extent3D = extern struct {
     /// TODO
     width: u32,
     /// TODO
-    height: u32,
+    height: u32 = 1,
     /// TODO
-    depth_or_array_layers: u32,
+    depth_or_array_layers: u32 = 1,
 };
 pub const ExternalTextureBindingEntry = extern struct {
     chain: ChainedStruct,
@@ -3792,95 +3792,95 @@ pub const InstanceLimits = extern struct {
 pub const Limits = extern struct {
     chain: ?*const ChainedStruct = null,
     /// TODO
-    max_texture_dimension_1D: u32,
+    max_texture_dimension_1D: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_texture_dimension_2D: u32,
+    max_texture_dimension_2D: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_texture_dimension_3D: u32,
+    max_texture_dimension_3D: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_texture_array_layers: u32,
+    max_texture_array_layers: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_bind_groups: u32,
+    max_bind_groups: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_bind_groups_plus_vertex_buffers: u32,
+    max_bind_groups_plus_vertex_buffers: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_bindings_per_bind_group: u32,
+    max_bindings_per_bind_group: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_dynamic_uniform_buffers_per_pipeline_layout: u32,
+    max_dynamic_uniform_buffers_per_pipeline_layout: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_dynamic_storage_buffers_per_pipeline_layout: u32,
+    max_dynamic_storage_buffers_per_pipeline_layout: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_sampled_textures_per_shader_stage: u32,
+    max_sampled_textures_per_shader_stage: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_samplers_per_shader_stage: u32,
+    max_samplers_per_shader_stage: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_storage_buffers_per_shader_stage: u32,
+    max_storage_buffers_per_shader_stage: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_storage_textures_per_shader_stage: u32,
+    max_storage_textures_per_shader_stage: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_uniform_buffers_per_shader_stage: u32,
+    max_uniform_buffers_per_shader_stage: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_uniform_buffer_binding_size: u64,
+    max_uniform_buffer_binding_size: u64 = LIMIT_U64_UNDEFINED,
     /// TODO
-    max_storage_buffer_binding_size: u64,
+    max_storage_buffer_binding_size: u64 = LIMIT_U64_UNDEFINED,
     /// TODO
-    min_uniform_buffer_offset_alignment: u32,
+    min_uniform_buffer_offset_alignment: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    min_storage_buffer_offset_alignment: u32,
+    min_storage_buffer_offset_alignment: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_vertex_buffers: u32,
+    max_vertex_buffers: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_buffer_size: u64,
+    max_buffer_size: u64 = LIMIT_U64_UNDEFINED,
     /// TODO
-    max_vertex_attributes: u32,
+    max_vertex_attributes: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_vertex_buffer_array_stride: u32,
+    max_vertex_buffer_array_stride: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_inter_stage_shader_variables: u32,
+    max_inter_stage_shader_variables: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_color_attachments: u32,
+    max_color_attachments: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_color_attachment_bytes_per_sample: u32,
+    max_color_attachment_bytes_per_sample: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_compute_workgroup_storage_size: u32,
+    max_compute_workgroup_storage_size: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_compute_invocations_per_workgroup: u32,
+    max_compute_invocations_per_workgroup: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_compute_workgroup_size_x: u32,
+    max_compute_workgroup_size_x: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_compute_workgroup_size_y: u32,
+    max_compute_workgroup_size_y: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_compute_workgroup_size_z: u32,
+    max_compute_workgroup_size_z: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_compute_workgroups_per_dimension: u32,
+    max_compute_workgroups_per_dimension: u32 = LIMIT_U32_UNDEFINED,
     /// TODO
-    max_immediate_size: u32,
+    max_immediate_size: u32 = LIMIT_U32_UNDEFINED,
 };
 pub const MultisampleState = extern struct {
     chain: ?*const ChainedStruct = null,
     /// TODO
-    count: u32,
+    count: u32 = 1,
     /// TODO
-    mask: u32,
+    mask: u32 = @bitCast(0xFFFFFFFF),
     /// TODO
-    alpha_to_coverage_enabled: Bool,
+    alpha_to_coverage_enabled: Bool = FALSE,
 };
 pub const Origin3D = extern struct {
     /// TODO
-    x: u32,
+    x: u32 = 0,
     /// TODO
-    y: u32,
+    y: u32 = 0,
     /// TODO
-    z: u32,
+    z: u32 = 0,
 };
 pub const PassTimestampWrites = extern struct {
     chain: ?*const ChainedStruct = null,
     /// Query set to write timestamps to.
     query_set: *QuerySet,
     /// TODO
-    beginning_of_pass_write_index: u32,
+    beginning_of_pass_write_index: u32 = QUERY_SET_INDEX_UNDEFINED,
     /// TODO
-    end_of_pass_write_index: u32,
+    end_of_pass_write_index: u32 = QUERY_SET_INDEX_UNDEFINED,
 };
 pub const PipelineLayoutDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
@@ -3890,7 +3890,7 @@ pub const PipelineLayoutDescriptor = extern struct {
     bind_group_layouts_count: usize,
     bind_group_layouts: [*]const *const BindGroupLayout,
     /// TODO
-    immediate_size: u32,
+    immediate_size: u32 = 0,
 };
 pub const PrimitiveState = extern struct {
     chain: ?*const ChainedStruct = null,
@@ -3906,7 +3906,7 @@ pub const PrimitiveState = extern struct {
     /// [defaults](@ref SentinelValues) to @ref WGPUCullMode_None.
     cull_mode: CullMode,
     /// TODO
-    unclipped_depth: Bool,
+    unclipped_depth: Bool = FALSE,
 };
 pub const QuerySetDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
@@ -3937,11 +3937,11 @@ pub const RenderBundleEncoderDescriptor = extern struct {
     /// TODO
     depth_stencil_format: TextureFormat,
     /// TODO
-    sample_count: u32,
+    sample_count: u32 = 1,
     /// TODO
-    depth_read_only: Bool,
+    depth_read_only: Bool = FALSE,
     /// TODO
-    stencil_read_only: Bool,
+    stencil_read_only: Bool = FALSE,
 };
 pub const RenderPassColorAttachment = extern struct {
     chain: ?*const ChainedStruct = null,
@@ -3949,7 +3949,7 @@ pub const RenderPassColorAttachment = extern struct {
     /// @ref WGPURenderPassDescriptor::colorAttachments array.
     view: ?*TextureView,
     /// TODO
-    depth_slice: u32,
+    depth_slice: u32 = DEPTH_SLICE_UNDEFINED,
     /// TODO
     resolve_target: ?*TextureView,
     /// TODO
@@ -3973,9 +3973,9 @@ pub const RenderPassDepthStencilAttachment = extern struct {
     /// Use @ref WGPU_DEPTH_CLEAR_VALUE_UNDEFINED to indicate this semantically.
     ///
     /// If infinite, produces a @ref NonFiniteFloatValueError.
-    depth_clear_value: f32,
+    depth_clear_value: f32 = DEPTH_CLEAR_VALUE_UNDEFINED,
     /// TODO
-    depth_read_only: Bool,
+    depth_read_only: Bool = FALSE,
     /// TODO
     stencil_load_op: LoadOp,
     /// TODO
@@ -3983,7 +3983,7 @@ pub const RenderPassDepthStencilAttachment = extern struct {
     /// TODO
     stencil_clear_value: u32,
     /// TODO
-    stencil_read_only: Bool,
+    stencil_read_only: Bool = FALSE,
 };
 pub const RenderPassDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
@@ -4002,7 +4002,7 @@ pub const RenderPassDescriptor = extern struct {
 pub const RenderPassMaxDrawCount = extern struct {
     chain: ChainedStruct,
     /// TODO
-    max_draw_count: u64,
+    max_draw_count: u64 = 50000000,
 };
 pub const RenderPipelineDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
@@ -4034,7 +4034,7 @@ pub const RequestAdapterOptions = extern struct {
     power_preference: PowerPreference,
     /// If true, requires the adapter to be a "fallback" adapter as defined by the JS spec.
     /// If this is not possible, the request returns null.
-    force_fallback_adapter: Bool,
+    force_fallback_adapter: Bool = FALSE,
     /// If set, requires the adapter to have a particular backend type.
     /// If this is not possible, the request returns null.
     backend_type: BackendType,
@@ -4045,7 +4045,7 @@ pub const RequestAdapterOptions = extern struct {
 pub const RequestAdapterWebXROptions = extern struct {
     chain: ChainedStruct,
     /// Sets the `xrCompatible` option in the JS API.
-    xr_compatible: Bool,
+    xr_compatible: Bool = FALSE,
 };
 pub const SamplerBindingLayout = extern struct {
     chain: ?*const ChainedStruct = null,
@@ -4078,15 +4078,15 @@ pub const SamplerDescriptor = extern struct {
     /// TODO
     ///
     /// If non-finite, produces a @ref NonFiniteFloatValueError.
-    lod_min_clamp: f32,
+    lod_min_clamp: f32 = 0,
     /// TODO
     ///
     /// If non-finite, produces a @ref NonFiniteFloatValueError.
-    lod_max_clamp: f32,
+    lod_max_clamp: f32 = 32,
     /// TODO
     compare: CompareFunction,
     /// TODO
-    max_anisotropy: i16,
+    max_anisotropy: i16 = 1,
 };
 pub const ShaderModuleDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
@@ -4096,7 +4096,7 @@ pub const ShaderModuleDescriptor = extern struct {
 pub const ShaderSourceSPIRV = extern struct {
     chain: ChainedStruct,
     /// TODO
-    code_size: u32,
+    code_size: u32 = 0,
     /// TODO
     code: *const u32,
 };
@@ -4272,17 +4272,17 @@ pub const TexelCopyBufferInfo = extern struct {
 };
 pub const TexelCopyBufferLayout = extern struct {
     /// TODO
-    offset: u64,
+    offset: u64 = 0,
     /// TODO
-    bytes_per_row: u32,
+    bytes_per_row: u32 = COPY_STRIDE_UNDEFINED,
     /// TODO
-    rows_per_image: u32,
+    rows_per_image: u32 = COPY_STRIDE_UNDEFINED,
 };
 pub const TexelCopyTextureInfo = extern struct {
     /// TODO
     texture: *Texture,
     /// TODO
-    mip_level: u32,
+    mip_level: u32 = 0,
     /// TODO
     origin: Origin3D,
     /// If set to @ref WGPUTextureAspect_Undefined,
@@ -4298,7 +4298,7 @@ pub const TextureBindingLayout = extern struct {
     /// [defaults](@ref SentinelValues) to @ref WGPUTextureViewDimension_2D.
     view_dimension: TextureViewDimension,
     /// TODO
-    multisampled: Bool,
+    multisampled: Bool = FALSE,
 };
 pub const TextureBindingViewDimension = extern struct {
     chain: ChainedStruct,
@@ -4346,9 +4346,9 @@ pub const TextureDescriptor = extern struct {
     /// TODO
     format: TextureFormat,
     /// TODO
-    mip_level_count: u32,
+    mip_level_count: u32 = 1,
     /// TODO
-    sample_count: u32,
+    sample_count: u32 = 1,
     /// TODO
     view_formats_count: usize,
     view_formats: [*]const TextureFormat,
@@ -4362,13 +4362,13 @@ pub const TextureViewDescriptor = extern struct {
     /// TODO
     dimension: TextureViewDimension,
     /// TODO
-    base_mip_level: u32,
+    base_mip_level: u32 = 0,
     /// TODO
-    mip_level_count: u32,
+    mip_level_count: u32 = MIP_LEVEL_COUNT_UNDEFINED,
     /// TODO
-    base_array_layer: u32,
+    base_array_layer: u32 = 0,
     /// TODO
-    array_layer_count: u32,
+    array_layer_count: u32 = ARRAY_LAYER_COUNT_UNDEFINED,
     /// If set to @ref WGPUTextureAspect_Undefined,
     /// [defaults](@ref SentinelValues) to @ref WGPUTextureAspect_All.
     aspect: TextureAspect,

@@ -1,10 +1,16 @@
 # TODO
+
 - [x] Method mapping
 - [x] Callbacks
 - [ ] Helpers
     - [-] Sync funtion
-- [ ] Tests
-- [ ] Examples
+- [-] Tests
+- [-] Examples
 - [x] Zig mapper for funtion that take in slice
 - [x] Mapping free_members function to deinit
 - [x] Struct fields
+
+## 28/09/2026
+
+- [x] Defaults
+- [x] Clean up
