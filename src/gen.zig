@@ -2,64 +2,70 @@ const std = @import("std");
 
 const logger = std.log.scoped(.main);
 const RAW = false;
-
 pub fn main(init: std.process.Init) !void {
-    var args_iterator = init.minimal.args.iterate();
-    _ = args_iterator.skip(); // skip args[0]
-    const cwd = std.Io.Dir.cwd();
-    const buf: []u8 = try init.gpa.alloc(u8, 512);
-    defer init.gpa.free(buf);
-    const arena = init.arena.allocator();
-    while (args_iterator.next()) |file| {
-        defer _ = init.arena.reset(.retain_capacity);
-        logger.debug("processing: {s}", .{file});
-
-        const input_json = try cwd.openFile(init.io, file, .{ .mode = .read_only });
-        errdefer input_json.close(init.io);
-
-        var reader = input_json.reader(init.io, buf);
-        const input_json_content = try reader.interface.readAlloc(arena, try input_json.length(init.io));
-        input_json.close(init.io);
-        defer arena.free(input_json_content);
-
-        const parsed = try std.json.parseFromSlice(
-            Yml,
-            arena,
-            input_json_content,
-            .{
-                .allocate = .alloc_if_needed,
-                .ignore_unknown_fields = true,
-                .duplicate_field_behavior = .@"error",
-                .parse_numbers = true,
-            },
-        );
-        errdefer parsed.deinit();
-        var ctx: Context = .{ .spec = parsed.value, .allocator = arena };
-        const zig_code = try generateZigCode(&ctx);
-        defer arena.free(zig_code);
-        parsed.deinit();
-
-        const outfile_name = try std.mem.concat(arena, u8, &.{ file, ".zig" });
-        defer arena.free(outfile_name);
-        const outfile = try cwd.createFile(init.io, outfile_name, .{});
-        if (RAW) {
-            try outfile.writeStreamingAll(init.io, zig_code);
-        } else {
-            var ast = try std.zig.Ast.parse(init.gpa, zig_code, .zig);
-            defer ast.deinit(init.gpa);
-
-            if (ast.errors.len > 0) {
-                for (ast.errors) |err| {
-                    logger.debug("kind: {t}", .{err.tag});
-                }
-            }
-            var outfile_writer = outfile.writer(init.io, buf);
-            const interface = &outfile_writer.interface;
-            try ast.render(init.gpa, interface, .{ .rebase_imported_paths = null });
-            try interface.flush();
-        }
-        outfile.close(init.io);
+    var arg_iter = init.minimal.args.iterate();
+    _ = arg_iter.skip();
+    while (arg_iter.next()) |file| {
+        try gen(file, init.io, init.gpa);
     }
+}
+
+pub fn gen(input: []const u8, io: std.Io, gpa: std.mem.Allocator) !void {
+    const cwd = std.Io.Dir.cwd();
+    const buf: []u8 = try gpa.alloc(u8, 512);
+    defer gpa.free(buf);
+    var arena_: std.heap.ArenaAllocator = .init(gpa);
+    defer arena_.deinit();
+    const arena = arena_.allocator();
+    const file = input;
+    defer _ = arena_.reset(.retain_capacity);
+    logger.debug("processing: {s}", .{file});
+
+    const input_json = try cwd.openFile(io, file, .{ .mode = .read_only });
+    errdefer input_json.close(io);
+
+    var reader = input_json.reader(io, buf);
+    const input_json_content = try reader.interface.readAlloc(arena, try input_json.length(io));
+    input_json.close(io);
+    defer arena.free(input_json_content);
+
+    const parsed = try std.json.parseFromSlice(
+        Yml,
+        arena,
+        input_json_content,
+        .{
+            .allocate = .alloc_if_needed,
+            .ignore_unknown_fields = true,
+            .duplicate_field_behavior = .@"error",
+            .parse_numbers = true,
+        },
+    );
+    errdefer parsed.deinit();
+    var ctx: Context = .{ .spec = parsed.value, .allocator = arena };
+    const zig_code = try generateZigCode(&ctx);
+    defer arena.free(zig_code);
+    parsed.deinit();
+
+    const outfile_name = try std.mem.concat(arena, u8, &.{ file, ".zig" });
+    defer arena.free(outfile_name);
+    const outfile = try cwd.createFile(io, outfile_name, .{});
+    if (RAW) {
+        try outfile.writeStreamingAll(io, zig_code);
+    } else {
+        var ast = try std.zig.Ast.parse(gpa, zig_code, .zig);
+        defer ast.deinit(gpa);
+
+        if (ast.errors.len > 0) {
+            for (ast.errors) |err| {
+                logger.debug("kind: {t}", .{err.tag});
+            }
+        }
+        var outfile_writer = outfile.writer(io, buf);
+        const interface = &outfile_writer.interface;
+        try ast.render(gpa, interface, .{ .rebase_imported_paths = null });
+        try interface.flush();
+    }
+    outfile.close(io);
 }
 
 fn generateZigCode(ctx: *Context) ![:0]u8 {
@@ -99,6 +105,7 @@ fn generateZigCode(ctx: *Context) ![:0]u8 {
         }
         try writer.print("pub const {s} = {s};\n\n", .{ upper_name, upper_value });
     }
+
     for (ctx.spec.enums) |enumm| {
         logger.debug(
             "Generating enum: {s}, with {} memebers",
@@ -120,6 +127,7 @@ fn generateZigCode(ctx: *Context) ![:0]u8 {
         }
         _ = try writer.write("};\n\n");
     }
+
     for (ctx.spec.bitflags) |bitflag| {
         logger.debug(
             "Generating bitfag: {s}, with {} options",
@@ -140,6 +148,7 @@ fn generateZigCode(ctx: *Context) ![:0]u8 {
         try writer.print("__unused: u{} = 0,\n", .{left + 1});
         _ = try writer.write("};\n");
     }
+
     for (ctx.spec.callbacks) |cb| {
         logger.debug(
             "Generating callback: {s}, has {} args, style {s}",

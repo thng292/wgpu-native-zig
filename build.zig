@@ -6,6 +6,7 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
     const linkage = b.option(std.builtin.LinkMode, "linkage", "wgpu-native link mode") orelse .static;
     const examples = b.option([]const u8, "examples", "Build examples, pass as comma separated list");
+    const version = b.option([]const u8, "wgpu-version", "wgpu-version to update to, only work with update-wgpu command");
 
     // Root Modulue
     const mod = b.addModule("wgpu-native-zig", .{
@@ -55,28 +56,9 @@ pub fn build(b: *std.Build) void {
 
     // Examples
     const example_step = b.step("example", "Build examples");
-    var to_be_built: std.ArrayList([]const u8) = .empty;
-    defer to_be_built.deinit(b.allocator);
 
-    if (examples) |exs| {
-        var iter = std.mem.splitAny(u8, exs, ",");
-        while (iter.next()) |example| {
-            to_be_built.append(b.allocator, example) catch unreachable;
-        }
-    } else {
-        const cwd = std.Io.Dir.cwd();
-        const example_dir = cwd.openDir(b.graph.io, "examples", .{
-            .iterate = true,
-            .access_sub_paths = true,
-        }) catch unreachable;
-        var iter = example_dir.iterate();
-        while (iter.next(b.graph.io) catch unreachable) |example| {
-            if (example.kind == .file and std.mem.endsWith(u8, example.name, ".zig")) {
-                to_be_built.append(b.allocator, example.name) catch unreachable;
-            }
-        }
-    }
-    for (to_be_built.items) |example| {
+    var iter = std.mem.splitAny(u8, examples orelse "", ",");
+    while (iter.next()) |example| {
         const example_mod = b.addModule(example, .{
             .target = target,
             .optimize = optimize,
@@ -90,6 +72,20 @@ pub fn build(b: *std.Build) void {
         const example_exe = b.addExecutable(.{ .name = example, .root_module = example_mod });
         const install_step = b.addInstallArtifact(example_exe, .{});
         example_step.dependOn(&install_step.step);
+    }
+
+    const update_wgpu = b.step("update-wgpu", "Update wgpu deps from build.zig.zon");
+    inline for (entries) |entry| {
+        update_wgpu.dependOn(&b.addSystemCommand(&.{
+            "zig",
+            "fetch",
+            "--save=" ++ entry.@"0",
+            std.fmt.allocPrint(
+                b.allocator,
+                entry.@"1",
+                .{version orelse DEFAULT_VERSION},
+            ) catch unreachable,
+        }).step);
     }
 }
 
@@ -145,3 +141,36 @@ fn linkSystemLib(compile_step: *std.Build.Module, target: std.Target) void {
         else => {},
     }
 }
+
+// Format with version, example: https://github.com/gfx-rs/wgpu-native/releases/download/v29.0.1.1/wgpu-android-aarch64-debug.zip
+const DEFAULT_VERSION = "v29.0.1.1";
+const entries: []const struct { []const u8, []const u8 } = &.{
+    .{ "wgpu_android_aarch64_debug", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-android-aarch64-debug.zip" },
+    .{ "wgpu_android_aarch64_release", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-android-aarch64-release.zip" },
+    .{ "wgpu_android_armv7_debug", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-android-armv7-debug.zip" },
+    .{ "wgpu_android_armv7_release", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-android-armv7-release.zip" },
+    .{ "wgpu_android_i686_debug", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-android-i686-debug.zip" },
+    .{ "wgpu_android_i686_release", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-android-i686-release.zip" },
+    .{ "wgpu_android_x86_64_debug", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-android-x86_64-debug.zip" },
+    .{ "wgpu_android_x86_64_release", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-android-x86_64-release.zip" },
+    .{ "wgpu_ios_aarch64_debug", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-ios-aarch64-debug.zip" },
+    .{ "wgpu_ios_aarch64_release", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-ios-aarch64-release.zip" },
+    .{ "wgpu_ios_aarch64_simulator_debug", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-ios-aarch64-simulator-debug.zip" },
+    .{ "wgpu_ios_aarch64_simulator_release", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-ios-aarch64-simulator-release.zip" },
+    .{ "wgpu_ios_x86_64_simulator_debug", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-ios-x86_64-simulator-debug.zip" },
+    .{ "wgpu_ios_x86_64_simulator_release", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-ios-x86_64-simulator-release.zip" },
+    .{ "wgpu_linux_aarch64_debug", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-linux-aarch64-debug.zip" },
+    .{ "wgpu_linux_aarch64_release", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-linux-aarch64-release.zip" },
+    .{ "wgpu_linux_x86_64_debug", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-linux-x86_64-debug.zip" },
+    .{ "wgpu_linux_x86_64_release", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-linux-x86_64-release.zip" },
+    .{ "wgpu_macos_aarch64_debug", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-macos-aarch64-debug.zip" },
+    .{ "wgpu_macos_aarch64_release", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-macos-aarch64-release.zip" },
+    .{ "wgpu_macos_x86_64_debug", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-macos-x86_64-debug.zip" },
+    .{ "wgpu_macos_x86_64_release", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-macos-x86_64-release.zip" },
+    .{ "wgpu_windows_aarch64_msvc_debug", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-windows-aarch64-msvc-debug.zip" },
+    .{ "wgpu_windows_aarch64_msvc_release", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-windows-aarch64-msvc-release.zip" },
+    .{ "wgpu_windows_i686_msvc_debug", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-windows-i686-msvc-debug.zip" },
+    .{ "wgpu_windows_i686_msvc_release", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-windows-i686-msvc-release.zip" },
+    .{ "wgpu_windows_x86_64_msvc_debug", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-windows-x86_64-msvc-debug.zip" },
+    .{ "wgpu_windows_x86_64_msvc_release", "https://github.com/gfx-rs/wgpu-native/releases/download/{s}/wgpu-windows-x86_64-msvc-release.zip" },
+};
