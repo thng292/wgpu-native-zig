@@ -454,6 +454,8 @@ pub const FeatureName = enum(u32) {
     subgroup_size_control = 0x00000017,
     /// TODO
     texture_compression_unaligned = 0x00000018,
+    /// TODO
+    atomic_vec2u_min_max = 0x00000019,
 };
 
 /// TODO

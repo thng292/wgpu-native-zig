@@ -74,7 +74,7 @@ pub fn build(b: *std.Build) void {
         example_step.dependOn(&install_step.step);
     }
 
-    const update_wgpu = b.step("update-wgpu", "Update wgpu deps from build.zig.zon");
+    const update_wgpu = b.step("update-wgpu", "Update wgpu deps in build.zig.zon");
     inline for (entries) |entry| {
         update_wgpu.dependOn(&b.addSystemCommand(&.{
             "zig",
