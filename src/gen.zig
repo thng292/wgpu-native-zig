@@ -615,7 +615,7 @@ fn renderZigMapper(ctx: *Context, prefix: []const u8, function: Function, writer
 
 fn renderDefault(ctx: *Context, param: ParameterType, writer: *std.Io.Writer) !void {
     if (std.mem.eql(u8, param.type, "string_with_default_empty")) {
-        writer.write(" = .empty");
+        _ = try writer.write(" = .empty");
     }
     if (param.default) |value| {
         switch (value) {

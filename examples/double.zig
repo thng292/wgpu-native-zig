@@ -1,8 +1,17 @@
 const std = @import("std");
-// const wgpu = @import("../src/webgpu.json.zig"); // For zls
-const wgpu = @import("wgpu");
+const wgpu = @import("../src/webgpu.json.zig"); // For zls
+// const wgpu = @import("wgpu");
 
 const numbers = [_]u32{ 1, 2, 3, 4 };
+
+const DOUBLE_SHADERCODE =
+    \\@group(0) @binding(0) var<storage, read_write> data: array<u32>;
+    \\
+    \\@compute @workgroup_size(1)
+    \\fn main(@builtin(global_invocation_id) id: vec3<u32>) {
+    \\    data[id.x] = data[id.x] * 2u;
+    \\}
+;
 
 pub fn main(init: std.process.Init) !void {
     const instance = wgpu.createInstance(null);
@@ -21,7 +30,7 @@ pub fn main(init: std.process.Init) !void {
 
     const wgsl_source = wgpu.ShaderSourceWGSL{
         .chain = .{ .next = null, .sType = .shader_source_WGSL },
-        .code = .fromSlice(@embedFile("compute-shader.wgsl")),
+        .code = .fromSlice(DOUBLE_SHADERCODE),
     };
     const shader_module = device.createShaderModule(&wgpu.ShaderModuleDescriptor{
         .label = .fromSlice("compute shader"),

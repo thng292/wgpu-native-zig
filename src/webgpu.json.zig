@@ -3506,7 +3506,7 @@ pub const AdapterInfo = extern struct {
 pub const BindGroupDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
     /// TODO
-    label: StringView,
+    label: StringView = .empty,
     /// TODO
     layout: *BindGroupLayout,
     /// TODO
@@ -3537,7 +3537,7 @@ pub const BindGroupEntry = extern struct {
 pub const BindGroupLayoutDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
     /// TODO
-    label: StringView,
+    label: StringView = .empty,
     /// TODO
     entries_count: usize,
     entries: [*]const BindGroupLayoutEntry,
@@ -3589,7 +3589,7 @@ pub const BufferBindingLayout = extern struct {
 pub const BufferDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
     /// TODO
-    label: StringView,
+    label: StringView = .empty,
     /// TODO
     usage: BufferUsage,
     /// TODO
@@ -3619,12 +3619,12 @@ pub const ColorTargetState = extern struct {
 pub const CommandBufferDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
     /// TODO
-    label: StringView,
+    label: StringView = .empty,
 };
 pub const CommandEncoderDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
     /// TODO
-    label: StringView,
+    label: StringView = .empty,
 };
 pub const CompatibilityModeLimits = extern struct {
     chain: ChainedStruct,
@@ -3661,14 +3661,14 @@ pub const CompilationMessage = extern struct {
 pub const ComputePassDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
     /// TODO
-    label: StringView,
+    label: StringView = .empty,
     /// TODO
     timestamp_writes: ?*const PassTimestampWrites,
 };
 pub const ComputePipelineDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
     /// TODO
-    label: StringView,
+    label: StringView = .empty,
     /// TODO
     layout: ?*PipelineLayout,
     /// TODO
@@ -3687,7 +3687,7 @@ pub const ComputeState = extern struct {
 pub const ConstantEntry = extern struct {
     chain: ?*const ChainedStruct = null,
     /// TODO
-    key: StringView,
+    key: StringView = .empty,
     /// Represents a WGSL numeric or boolean value using @ref DoubleAsSupertype.
     ///
     /// If non-finite, produces a @ref NonFiniteFloatValueError.
@@ -3723,7 +3723,7 @@ pub const DepthStencilState = extern struct {
 pub const DeviceDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
     /// TODO
-    label: StringView,
+    label: StringView = .empty,
     /// TODO
     required_features_count: usize,
     required_features: [*]const FeatureName,
@@ -3887,7 +3887,7 @@ pub const PassTimestampWrites = extern struct {
 pub const PipelineLayoutDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
     /// TODO
-    label: StringView,
+    label: StringView = .empty,
     /// TODO
     bind_group_layouts_count: usize,
     bind_group_layouts: [*]const *const BindGroupLayout,
@@ -3913,7 +3913,7 @@ pub const PrimitiveState = extern struct {
 pub const QuerySetDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
     /// TODO
-    label: StringView,
+    label: StringView = .empty,
     /// TODO
     type: QueryType,
     /// TODO
@@ -3922,17 +3922,17 @@ pub const QuerySetDescriptor = extern struct {
 pub const QueueDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
     /// TODO
-    label: StringView,
+    label: StringView = .empty,
 };
 pub const RenderBundleDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
     /// TODO
-    label: StringView,
+    label: StringView = .empty,
 };
 pub const RenderBundleEncoderDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
     /// TODO
-    label: StringView,
+    label: StringView = .empty,
     /// TODO
     color_formats_count: usize,
     color_formats: [*]const TextureFormat,
@@ -3990,7 +3990,7 @@ pub const RenderPassDepthStencilAttachment = extern struct {
 pub const RenderPassDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
     /// TODO
-    label: StringView,
+    label: StringView = .empty,
     /// TODO
     color_attachments_count: usize,
     color_attachments: [*]const RenderPassColorAttachment,
@@ -4009,7 +4009,7 @@ pub const RenderPassMaxDrawCount = extern struct {
 pub const RenderPipelineDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
     /// TODO
-    label: StringView,
+    label: StringView = .empty,
     /// TODO
     layout: ?*PipelineLayout,
     /// TODO
@@ -4058,7 +4058,7 @@ pub const SamplerBindingLayout = extern struct {
 pub const SamplerDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
     /// TODO
-    label: StringView,
+    label: StringView = .empty,
     /// If set to @ref WGPUAddressMode_Undefined,
     /// [defaults](@ref SentinelValues) to @ref WGPUAddressMode_ClampToEdge.
     address_mode_u: AddressMode,
@@ -4093,7 +4093,7 @@ pub const SamplerDescriptor = extern struct {
 pub const ShaderModuleDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
     /// TODO
-    label: StringView,
+    label: StringView = .empty,
 };
 pub const ShaderSourceSPIRV = extern struct {
     chain: ChainedStruct,
@@ -4105,7 +4105,7 @@ pub const ShaderSourceSPIRV = extern struct {
 pub const ShaderSourceWGSL = extern struct {
     chain: ChainedStruct,
     /// TODO
-    code: StringView,
+    code: StringView = .empty,
 };
 pub const StencilFaceState = extern struct {
     /// If set to @ref WGPUCompareFunction_Undefined,
@@ -4217,7 +4217,7 @@ pub const SurfaceConfiguration = extern struct {
 pub const SurfaceDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
     /// Label used to refer to the object.
-    label: StringView,
+    label: StringView = .empty,
 };
 pub const SurfaceSourceAndroidNativeWindow = extern struct {
     chain: ChainedStruct,
@@ -4337,7 +4337,7 @@ pub const TextureComponentSwizzleDescriptor = extern struct {
 pub const TextureDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
     /// TODO
-    label: StringView,
+    label: StringView = .empty,
     /// TODO
     usage: TextureUsage,
     /// If set to @ref WGPUTextureDimension_Undefined,
@@ -4358,7 +4358,7 @@ pub const TextureDescriptor = extern struct {
 pub const TextureViewDescriptor = extern struct {
     chain: ?*const ChainedStruct = null,
     /// TODO
-    label: StringView,
+    label: StringView = .empty,
     /// TODO
     format: TextureFormat,
     /// TODO
