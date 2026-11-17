@@ -49,9 +49,7 @@ pub fn build(b: *std.Build) void {
     });
 
     const gen_run_step = b.addRunArtifact(gen_exe);
-    if (b.args) |run_args| {
-        gen_run_step.addArgs(run_args);
-    }
+    gen_run_step.addPassthruArgs();
     gen_step.dependOn(&gen_run_step.step);
 
     // Examples
@@ -114,7 +112,7 @@ fn getWGPUDeps(b: *std.Build, target: std.Target, optimze: std.builtin.OptimizeM
         },
         inline else => |tag| @panic(std.fmt.comptimePrint("wgpu-native does not support {s}", .{@tagName(tag)})),
     }
-    if (optimze == .Debug) {
+    if (optimze == .debug) {
         dep_name = std.mem.concat(b.allocator, u8, &.{ dep_name, "debug" }) catch unreachable;
     } else {
         dep_name = std.mem.concat(b.allocator, u8, &.{ dep_name, "release" }) catch unreachable;
