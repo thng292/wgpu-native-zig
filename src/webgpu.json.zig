@@ -1266,7 +1266,7 @@ pub const TextureUsage = packed struct(Flags) {
 /// TODO
 /// message
 /// TODO
-const BufferMapCallbackInfo = extern struct {
+pub const BufferMapCallbackInfo = extern struct {
     nextInChain: ?*const ChainedStruct = null,
     mode: CallbackMode,
     callback: *const fn (
@@ -1284,7 +1284,7 @@ const BufferMapCallbackInfo = extern struct {
 /// compilation_info
 /// This argument contains multiple @ref ImplementationAllocatedStructChain roots.
 /// Arbitrary chains must be handled gracefully by the application!
-const CompilationInfoCallbackInfo = extern struct {
+pub const CompilationInfoCallbackInfo = extern struct {
     nextInChain: ?*const ChainedStruct = null,
     mode: CallbackMode,
     callback: *const fn (
@@ -1303,7 +1303,7 @@ const CompilationInfoCallbackInfo = extern struct {
 /// TODO
 /// message
 /// TODO
-const CreateComputePipelineAsyncCallbackInfo = extern struct {
+pub const CreateComputePipelineAsyncCallbackInfo = extern struct {
     nextInChain: ?*const ChainedStruct = null,
     mode: CallbackMode,
     callback: *const fn (
@@ -1323,7 +1323,7 @@ const CreateComputePipelineAsyncCallbackInfo = extern struct {
 /// TODO
 /// message
 /// TODO
-const CreateRenderPipelineAsyncCallbackInfo = extern struct {
+pub const CreateRenderPipelineAsyncCallbackInfo = extern struct {
     nextInChain: ?*const ChainedStruct = null,
     mode: CallbackMode,
     callback: *const fn (
@@ -1346,7 +1346,7 @@ const CreateRenderPipelineAsyncCallbackInfo = extern struct {
 /// An error code explaining why the device was lost.
 /// message
 /// A @ref LocalizableHumanReadableMessageString describing why the device was lost.
-const DeviceLostCallbackInfo = extern struct {
+pub const DeviceLostCallbackInfo = extern struct {
     nextInChain: ?*const ChainedStruct = null,
     mode: CallbackMode,
     callback: *const fn (
@@ -1370,7 +1370,7 @@ const DeviceLostCallbackInfo = extern struct {
 /// the `type` is not @ref WGPUErrorType_NoError, this is a non-empty
 /// @ref LocalizableHumanReadableMessageString;
 /// otherwise, this is an empty string.
-const PopErrorScopeCallbackInfo = extern struct {
+pub const PopErrorScopeCallbackInfo = extern struct {
     nextInChain: ?*const ChainedStruct = null,
     mode: CallbackMode,
     callback: *const fn (
@@ -1390,7 +1390,7 @@ const PopErrorScopeCallbackInfo = extern struct {
 /// If the `status` is not @ref WGPUQueueWorkDoneStatus_Success,
 /// this is a non-empty @ref LocalizableHumanReadableMessageString;
 /// otherwise, this is an empty string.
-const QueueWorkDoneCallbackInfo = extern struct {
+pub const QueueWorkDoneCallbackInfo = extern struct {
     nextInChain: ?*const ChainedStruct = null,
     mode: CallbackMode,
     callback: *const fn (
@@ -1409,7 +1409,7 @@ const QueueWorkDoneCallbackInfo = extern struct {
 /// TODO
 /// message
 /// TODO
-const RequestAdapterCallbackInfo = extern struct {
+pub const RequestAdapterCallbackInfo = extern struct {
     nextInChain: ?*const ChainedStruct = null,
     mode: CallbackMode,
     callback: *const fn (
@@ -1429,7 +1429,7 @@ const RequestAdapterCallbackInfo = extern struct {
 /// TODO
 /// message
 /// TODO
-const RequestDeviceCallbackInfo = extern struct {
+pub const RequestDeviceCallbackInfo = extern struct {
     nextInChain: ?*const ChainedStruct = null,
     mode: CallbackMode,
     callback: *const fn (
@@ -1449,7 +1449,7 @@ const RequestDeviceCallbackInfo = extern struct {
 /// TODO
 /// message
 /// TODO
-const UncapturedErrorCallbackInfo = extern struct {
+pub const UncapturedErrorCallbackInfo = extern struct {
     nextInChain: ?*const ChainedStruct = null,
     callback: *const fn (
         device: ?*const Device,

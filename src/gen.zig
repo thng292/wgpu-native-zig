@@ -163,7 +163,7 @@ fn generateZigCode(ctx: *Context) ![:0]u8 {
                 try renderComment(arg.doc, .doc, writer);
             }
         }
-        _ = try writer.write("const ");
+        _ = try writer.write("pub const ");
         try convertSnakeToPascal(cb.name, writer);
         _ = try writer.write(
             \\CallbackInfo = extern struct {

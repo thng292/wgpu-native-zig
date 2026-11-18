@@ -7,13 +7,7 @@ pub fn requestAdapterSync(instance: *wgpu.Instance, options: ?*const wgpu.Reques
     const CBType = SyncCallback(*wgpu.Adapter, wgpu.RequestAdapterStatus, null);
     var cb: CBType = .{ .io = io };
     cb.init();
-    _ = instance.requestAdapter(options, .{
-        .nextInChain = null,
-        .mode = .allow_spontaneous,
-        .callback = CBType.callback,
-        .userdata1 = @ptrCast(@alignCast(&cb)),
-        .userdata2 = null,
-    });
+    _ = instance.requestAdapter(options, cb.toCallbackInfo(wgpu.RequestAdapterCallbackInfo));
     return cb.await();
 }
 
@@ -21,13 +15,7 @@ pub fn requestDeviceSync(adapter: *wgpu.Adapter, descriptor: ?*const wgpu.Device
     const CBType = SyncCallback(*wgpu.Device, wgpu.RequestDeviceStatus, null);
     var cb: CBType = .{ .io = io };
     cb.init();
-    _ = adapter.requestDevice(descriptor, .{
-        .nextInChain = null,
-        .mode = .allow_spontaneous,
-        .callback = CBType.callback,
-        .userdata1 = @ptrCast(@alignCast(&cb)),
-        .userdata2 = null,
-    });
+    _ = adapter.requestDevice(descriptor, cb.toCallbackInfo(wgpu.RequestDeviceCallbackInfo));
     return cb.await();
 }
 
@@ -39,12 +27,9 @@ pub fn SyncCallback(
     if (result_T == void) {
         const UserData = struct {
             status: status_T = @fromBackingInt(@intCast(1)),
-            done: std.Io.Mutex = .init,
+            // done: std.Io.Mutex = .init,
+            done: std.Io.Mutex = .{ .state = .init(.locked_once) },
             io: std.Io,
-
-            pub fn init(self: *@This()) void {
-                std.Io.Mutex.lockUncancelable(self.done, self.io);
-            }
 
             pub fn callback(
                 status: status_T,
@@ -58,12 +43,23 @@ pub fn SyncCallback(
                 if (message.toSlice()) |msg| {
                     logger.err("{s}", .{msg});
                 }
-                std.Io.Mutex.unlock(&self.done, self.io.*);
+                self.done.unlock(self.io);
             }
 
-            pub fn await(self: @This()) ?result_T {
-                std.Io.Mutex.lockUncancelable(&self.done, self.io);
-                return self.result;
+            pub fn await(self: *@This()) void {
+                self.done.lockUncancelable(self.io);
+            }
+
+            pub fn tryAwait(self: *@This()) bool {
+                return self.done.tryLock();
+            }
+
+            pub fn toCallbackInfo(self: *@This(), T: type) T {
+                return .{
+                    .mode = .allow_process_events,
+                    .callback = @This().callback,
+                    .userdata1 = @ptrCast(@alignCast(self)),
+                };
             }
         };
         return UserData;
@@ -71,11 +67,12 @@ pub fn SyncCallback(
         const UserData = struct {
             result: ?result_T = null,
             status: status_T = @fromBackingInt(@intCast(1)),
-            done: std.Io.Mutex = .init,
+            done: std.Io.Mutex = .{ .state = .init(.locked_once) },
             io: std.Io,
 
             pub fn init(self: *@This()) void {
-                std.Io.Mutex.lockUncancelable(&self.done, self.io);
+                _ = self;
+                // self.done.lockUncancelable(self.io);
             }
 
             pub fn callback(
@@ -99,12 +96,23 @@ pub fn SyncCallback(
                 if (message.toSlice()) |msg| {
                     logger.err("{s}", .{msg});
                 }
-                std.Io.Mutex.unlock(&self.done, self.io);
+                self.done.unlock(self.io);
             }
 
             pub fn await(self: *@This()) ?result_T {
-                std.Io.Mutex.lockUncancelable(&self.done, self.io);
+                self.done.lockUncancelable(self.io);
                 return self.result;
+            }
+
+            pub fn tryAwait(self: *@This()) bool {
+                return self.done.tryLock();
+            }
+            pub fn toCallbackInfo(self: *@This(), T: type) T {
+                return .{
+                    .mode = .allow_process_events,
+                    .callback = @This().callback,
+                    .userdata1 = @ptrCast(@alignCast(self)),
+                };
             }
         };
         return UserData;
