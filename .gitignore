@@ -5,3 +5,4 @@ __pycache__/
 .venv/
 a.out
 tmp.*
+.DS_Store

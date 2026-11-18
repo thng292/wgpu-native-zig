@@ -52,7 +52,7 @@ pub fn gen(input: []const u8, io: std.Io, gpa: std.mem.Allocator) !void {
     if (RAW) {
         try outfile.writeStreamingAll(io, zig_code);
     } else {
-        var ast = try std.zig.Ast.parse(gpa, zig_code, .zig);
+        var ast = try std.zig.Ast.parse(gpa, zig_code, .{ .mode = .zig });
         defer ast.deinit(gpa);
 
         if (ast.errors.len > 0) {
@@ -167,7 +167,7 @@ fn generateZigCode(ctx: *Context) ![:0]u8 {
         try convertSnakeToPascal(cb.name, writer);
         _ = try writer.write(
             \\CallbackInfo = extern struct {
-            \\ nextInChain: ?*const ChainedStruct,
+            \\ nextInChain: ?*const ChainedStruct = null,
             \\
         );
         if (std.mem.eql(u8, cb.style, "callback_mode")) {
@@ -190,8 +190,8 @@ fn generateZigCode(ctx: *Context) ![:0]u8 {
         _ = try writer.write(") callconv(.c) void,\n");
 
         _ = try writer.write(
-            \\userdata1: ?*void,
-            \\userdata2: ?*void,
+            \\userdata1: ?*void = null,
+            \\userdata2: ?*void = null,
             \\};
             \\
         );

@@ -1267,7 +1267,7 @@ pub const TextureUsage = packed struct(Flags) {
 /// message
 /// TODO
 const BufferMapCallbackInfo = extern struct {
-    nextInChain: ?*const ChainedStruct,
+    nextInChain: ?*const ChainedStruct = null,
     mode: CallbackMode,
     callback: *const fn (
         status: MapAsyncStatus,
@@ -1275,8 +1275,8 @@ const BufferMapCallbackInfo = extern struct {
         user_data1: ?*void,
         user_data2: ?*void,
     ) callconv(.c) void,
-    userdata1: ?*void,
-    userdata2: ?*void,
+    userdata1: ?*void = null,
+    userdata2: ?*void = null,
 };
 /// TODO
 /// status
@@ -1285,7 +1285,7 @@ const BufferMapCallbackInfo = extern struct {
 /// This argument contains multiple @ref ImplementationAllocatedStructChain roots.
 /// Arbitrary chains must be handled gracefully by the application!
 const CompilationInfoCallbackInfo = extern struct {
-    nextInChain: ?*const ChainedStruct,
+    nextInChain: ?*const ChainedStruct = null,
     mode: CallbackMode,
     callback: *const fn (
         status: CompilationInfoRequestStatus,
@@ -1293,8 +1293,8 @@ const CompilationInfoCallbackInfo = extern struct {
         user_data1: ?*void,
         user_data2: ?*void,
     ) callconv(.c) void,
-    userdata1: ?*void,
-    userdata2: ?*void,
+    userdata1: ?*void = null,
+    userdata2: ?*void = null,
 };
 /// TODO
 /// status
@@ -1304,7 +1304,7 @@ const CompilationInfoCallbackInfo = extern struct {
 /// message
 /// TODO
 const CreateComputePipelineAsyncCallbackInfo = extern struct {
-    nextInChain: ?*const ChainedStruct,
+    nextInChain: ?*const ChainedStruct = null,
     mode: CallbackMode,
     callback: *const fn (
         status: CreatePipelineAsyncStatus,
@@ -1313,8 +1313,8 @@ const CreateComputePipelineAsyncCallbackInfo = extern struct {
         user_data1: ?*void,
         user_data2: ?*void,
     ) callconv(.c) void,
-    userdata1: ?*void,
-    userdata2: ?*void,
+    userdata1: ?*void = null,
+    userdata2: ?*void = null,
 };
 /// TODO
 /// status
@@ -1324,7 +1324,7 @@ const CreateComputePipelineAsyncCallbackInfo = extern struct {
 /// message
 /// TODO
 const CreateRenderPipelineAsyncCallbackInfo = extern struct {
-    nextInChain: ?*const ChainedStruct,
+    nextInChain: ?*const ChainedStruct = null,
     mode: CallbackMode,
     callback: *const fn (
         status: CreatePipelineAsyncStatus,
@@ -1333,8 +1333,8 @@ const CreateRenderPipelineAsyncCallbackInfo = extern struct {
         user_data1: ?*void,
         user_data2: ?*void,
     ) callconv(.c) void,
-    userdata1: ?*void,
-    userdata2: ?*void,
+    userdata1: ?*void = null,
+    userdata2: ?*void = null,
 };
 /// TODO
 /// device
@@ -1347,7 +1347,7 @@ const CreateRenderPipelineAsyncCallbackInfo = extern struct {
 /// message
 /// A @ref LocalizableHumanReadableMessageString describing why the device was lost.
 const DeviceLostCallbackInfo = extern struct {
-    nextInChain: ?*const ChainedStruct,
+    nextInChain: ?*const ChainedStruct = null,
     mode: CallbackMode,
     callback: *const fn (
         device: ?*const Device,
@@ -1356,8 +1356,8 @@ const DeviceLostCallbackInfo = extern struct {
         user_data1: ?*void,
         user_data2: ?*void,
     ) callconv(.c) void,
-    userdata1: ?*void,
-    userdata2: ?*void,
+    userdata1: ?*void = null,
+    userdata2: ?*void = null,
 };
 /// TODO
 /// status
@@ -1371,7 +1371,7 @@ const DeviceLostCallbackInfo = extern struct {
 /// @ref LocalizableHumanReadableMessageString;
 /// otherwise, this is an empty string.
 const PopErrorScopeCallbackInfo = extern struct {
-    nextInChain: ?*const ChainedStruct,
+    nextInChain: ?*const ChainedStruct = null,
     mode: CallbackMode,
     callback: *const fn (
         status: PopErrorScopeStatus,
@@ -1380,8 +1380,8 @@ const PopErrorScopeCallbackInfo = extern struct {
         user_data1: ?*void,
         user_data2: ?*void,
     ) callconv(.c) void,
-    userdata1: ?*void,
-    userdata2: ?*void,
+    userdata1: ?*void = null,
+    userdata2: ?*void = null,
 };
 /// TODO
 /// status
@@ -1391,7 +1391,7 @@ const PopErrorScopeCallbackInfo = extern struct {
 /// this is a non-empty @ref LocalizableHumanReadableMessageString;
 /// otherwise, this is an empty string.
 const QueueWorkDoneCallbackInfo = extern struct {
-    nextInChain: ?*const ChainedStruct,
+    nextInChain: ?*const ChainedStruct = null,
     mode: CallbackMode,
     callback: *const fn (
         status: QueueWorkDoneStatus,
@@ -1399,8 +1399,8 @@ const QueueWorkDoneCallbackInfo = extern struct {
         user_data1: ?*void,
         user_data2: ?*void,
     ) callconv(.c) void,
-    userdata1: ?*void,
-    userdata2: ?*void,
+    userdata1: ?*void = null,
+    userdata2: ?*void = null,
 };
 /// TODO
 /// status
@@ -1410,7 +1410,7 @@ const QueueWorkDoneCallbackInfo = extern struct {
 /// message
 /// TODO
 const RequestAdapterCallbackInfo = extern struct {
-    nextInChain: ?*const ChainedStruct,
+    nextInChain: ?*const ChainedStruct = null,
     mode: CallbackMode,
     callback: *const fn (
         status: RequestAdapterStatus,
@@ -1419,8 +1419,8 @@ const RequestAdapterCallbackInfo = extern struct {
         user_data1: ?*void,
         user_data2: ?*void,
     ) callconv(.c) void,
-    userdata1: ?*void,
-    userdata2: ?*void,
+    userdata1: ?*void = null,
+    userdata2: ?*void = null,
 };
 /// TODO
 /// status
@@ -1430,7 +1430,7 @@ const RequestAdapterCallbackInfo = extern struct {
 /// message
 /// TODO
 const RequestDeviceCallbackInfo = extern struct {
-    nextInChain: ?*const ChainedStruct,
+    nextInChain: ?*const ChainedStruct = null,
     mode: CallbackMode,
     callback: *const fn (
         status: RequestDeviceStatus,
@@ -1439,8 +1439,8 @@ const RequestDeviceCallbackInfo = extern struct {
         user_data1: ?*void,
         user_data2: ?*void,
     ) callconv(.c) void,
-    userdata1: ?*void,
-    userdata2: ?*void,
+    userdata1: ?*void = null,
+    userdata2: ?*void = null,
 };
 /// TODO
 /// device
@@ -1450,7 +1450,7 @@ const RequestDeviceCallbackInfo = extern struct {
 /// message
 /// TODO
 const UncapturedErrorCallbackInfo = extern struct {
-    nextInChain: ?*const ChainedStruct,
+    nextInChain: ?*const ChainedStruct = null,
     callback: *const fn (
         device: ?*const Device,
         type: ErrorType,
@@ -1458,8 +1458,8 @@ const UncapturedErrorCallbackInfo = extern struct {
         user_data1: ?*void,
         user_data2: ?*void,
     ) callconv(.c) void,
-    userdata1: ?*void,
-    userdata2: ?*void,
+    userdata1: ?*void = null,
+    userdata2: ?*void = null,
 };
 extern "C" fn wgpuCreateInstance(
     descriptor: ?*const InstanceDescriptor,
