@@ -31,6 +31,6 @@ zig build example -Dexamples=compute,compute2
 
 1. Run `zig build update-wgpu -Dwgpu-version=<version-to-update>`. (e.g. v29.0.1.1)
 
-## To use another webgpu implementation
+## Use with enscripten
 
-1. Update the build.zig.zon to add your implementation
+1. Set wgpu_linkage option to no

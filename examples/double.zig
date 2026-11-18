@@ -1,6 +1,6 @@
 const std = @import("std");
-const wgpu = @import("../src/webgpu.json.zig"); // For zls
-// const wgpu = @import("wgpu");
+// const wgpu = @import("../src/webgpu.json.zig"); // For zls
+const wgpu = @import("wgpu");
 
 const numbers = [_]u32{ 1, 2, 3, 4 };
 

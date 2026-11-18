@@ -1,10 +1,12 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
+const WgpuNativeLinkMode = enum { static, dynamic, no };
+
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
-    const linkage = b.option(std.builtin.LinkMode, "linkage", "wgpu-native link mode") orelse .static;
+    const wgpu_linkage = b.option(WgpuNativeLinkMode, "wgpu_linkage", "wgpu-native link mode") orelse .static;
     const examples = b.option([]const u8, "examples", "Build examples, pass as comma separated list");
     const version = b.option([]const u8, "wgpu-version", "wgpu-version to update to, only work with update-wgpu command");
 
@@ -15,14 +17,19 @@ pub fn build(b: *std.Build) void {
         .link_libc = true,
         .link_libcpp = true,
     });
-    linkSystemLib(mod, target.result);
-    const wgpu = getWGPUDeps(b, target.result, optimize);
-    mod.addLibraryPath(wgpu.path("lib/"));
-    mod.linkSystemLibrary("wgpu_native", .{
-        .needed = true,
-        .preferred_link_mode = linkage,
-        .use_pkg_config = .no,
-    });
+
+    if (wgpu_linkage != .no) {
+        const linkage: std.builtin.LinkMode = if (wgpu_linkage == .dynamic) .dynamic else .static;
+
+        linkSystemLib(mod, target.result);
+        const wgpu = getWGPUDeps(b, target.result, optimize);
+        mod.addLibraryPath(wgpu.path("lib/"));
+        mod.linkSystemLibrary("wgpu_native", .{
+            .needed = true,
+            .preferred_link_mode = linkage,
+            .use_pkg_config = .no,
+        });
+    }
 
     // Tests
     const mod_tests = b.addTest(.{
