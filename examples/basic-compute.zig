@@ -3,12 +3,13 @@ const std = @import("std");
 const wgpu = @import("wgpu");
 
 const NUM_ELEMENTS = 1000;
-const BUFFER_SIZE = NUM_ELEMENTS * 4; // Buffer size, in bytes
+const BUFFER_SIZE = NUM_ELEMENTS * @sizeOf(f16); // Buffer size, in bytes
 
 // NEED TO FORMAT FOR NUM_ELEMENTS, NOT HARDCODED
 const ShaderCode =
+    \\ enable f16;
     \\ @group(0) @binding(0)
-    \\ var<storage, read_write> output: array<f32>;
+    \\ var<storage, read_write> output: array<f16>;
     \\
     \\ @compute @workgroup_size(64)
     \\ fn main(
@@ -19,11 +20,11 @@ const ShaderCode =
     \\   local_id : vec3u,
     \\ ) {
     \\   // Avoid accessing the buffer out of bounds
-    \\   if (global_id.x >= 1000) {
+    \\   if (global_id.x >= arrayLength(&output)) {
     \\     return;
     \\   }
     \\
-    \\   output[global_id.x] = f32(global_id.x) * 1000. + f32(local_id.x);
+    \\   output[global_id.x] = f16(global_id.x) + f16(local_id.x);
     \\ }
 ;
 
@@ -32,7 +33,17 @@ pub fn main(init: std.process.Init) !void {
     defer wgpu_instance.deinit();
     const wgpu_adapter = wgpu.helpers.requestAdapterSync(wgpu_instance, null, init.io).?;
     defer wgpu_adapter.deinit();
-    const wgpu_device = wgpu.helpers.requestDeviceSync(wgpu_adapter, null, init.io).?;
+    const required_features = [_]wgpu.FeatureName{.shader_f16};
+    const wgpu_device = wgpu.helpers.requestDeviceSync(wgpu_adapter, &.{
+        .required_features = &required_features,
+        .required_features_count = required_features.len,
+        .required_limits = &.{
+            .max_buffer_size = BUFFER_SIZE * 4,
+        },
+        .default_queue = .{},
+        .device_lost_callback_info = undefined,
+        .uncaptured_error_callback_info = undefined,
+    }, init.io).?;
     defer wgpu_device.deinit();
 
     const output = wgpu_device.createBuffer(&.{
@@ -117,13 +128,11 @@ pub fn main(init: std.process.Init) !void {
         BUFFER_SIZE,
         cb.toCallbackInfo(wgpu.BufferMapCallbackInfo),
     );
-    std.log.info("Camed before await", .{});
     while (!cb.tryAwait()) {
         wgpu_instance.processEvents();
     }
-    std.log.info("Camed after await", .{});
 
-    const copy_array_buffer: [*]const f32 = @ptrCast(@alignCast(staging_buffer.getConstMappedRange(0, BUFFER_SIZE)));
+    const copy_array_buffer: [*]const f16 = @ptrCast(@alignCast(staging_buffer.getConstMappedRange(0, BUFFER_SIZE)));
     for (0..NUM_ELEMENTS) |i| {
         std.debug.print("{}, ", .{copy_array_buffer[i]});
     }

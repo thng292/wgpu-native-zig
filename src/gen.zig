@@ -138,6 +138,9 @@ fn generateZigCode(ctx: *Context) ![:0]u8 {
         _ = try writer.write(" = packed struct(Flags) {\n");
         var left: u6 = 63;
         for (bitflag.entries, 0..) |entry, i| {
+            if (entry.value_combination.len != 0) {
+                continue;
+            }
             if (i == 0 and std.mem.eql(u8, entry.name, "none")) continue;
             if (entry.doc.len > 0) {
                 try renderComment(entry.doc, .doc, writer);
@@ -146,6 +149,15 @@ fn generateZigCode(ctx: *Context) ![:0]u8 {
             left -= 1;
         }
         try writer.print("__unused: u{} = 0,\n", .{left + 1});
+        for (bitflag.entries) |entry| {
+            if (entry.value_combination.len != 0) {
+                try writer.print("pub const {s}: @This() = .{{", .{entry.name});
+                for (entry.value_combination) |val| {
+                    try writer.print(".{s} = true,", .{val});
+                }
+                _ = try writer.write("};");
+            }
+        }
         _ = try writer.write("};\n");
     }
 
@@ -633,7 +645,7 @@ fn renderDefault(ctx: *Context, param: ParameterType, writer: *std.Io.Writer) !v
                     }
                 }
                 if (std.mem.startsWith(u8, v, "0x")) {
-                    try writer.print(" = @bitCast({s})", .{v});
+                    try writer.print(" = {s}", .{v});
                 }
                 if (std.mem.eql(u8, v, "zero")) {
                     _ = try writer.write(" = std.mem.zeroes(");

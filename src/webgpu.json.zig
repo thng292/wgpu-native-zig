@@ -1226,9 +1226,13 @@ pub const ColorWriteMask = packed struct(Flags) {
     blue: bool = false,
     /// TODO
     alpha: bool = false,
-    /// TODO
-    all: bool = false,
-    __unused: u59 = 0,
+    __unused: u60 = 0,
+    pub const all: @This() = .{
+        .red = true,
+        .green = true,
+        .blue = true,
+        .alpha = true,
+    };
 };
 pub const MapMode = packed struct(Flags) {
     /// TODO
@@ -3706,9 +3710,9 @@ pub const DepthStencilState = extern struct {
     /// TODO
     stencil_back: StencilFaceState,
     /// TODO
-    stencil_read_mask: u32 = @bitCast(0xFFFFFFFF),
+    stencil_read_mask: u32 = 0xFFFFFFFF,
     /// TODO
-    stencil_write_mask: u32 = @bitCast(0xFFFFFFFF),
+    stencil_write_mask: u32 = 0xFFFFFFFF,
     /// TODO
     depth_bias: i32 = 0,
     /// TODO
@@ -3863,7 +3867,7 @@ pub const MultisampleState = extern struct {
     /// TODO
     count: u32 = 1,
     /// TODO
-    mask: u32 = @bitCast(0xFFFFFFFF),
+    mask: u32 = 0xFFFFFFFF,
     /// TODO
     alpha_to_coverage_enabled: Bool = FALSE,
 };
